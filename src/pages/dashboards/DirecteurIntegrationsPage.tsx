@@ -67,7 +67,7 @@ export const DirecteurIntegrationsPage = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white">Integrations Externes</h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">Connectez vos outils preferes a RH Pro</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">Connectez vos outils preferes a RH Manager</p>
         </div>
         <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-xl">
           <Zap className="w-5 h-5 text-green-600" />
@@ -82,7 +82,7 @@ export const DirecteurIntegrationsPage = () => {
           </div>
           <div>
             <h3 className="text-lg font-bold mb-2">Ecosysteme d'integrations</h3>
-            <p className="text-sm text-white/90 mb-3">Connectez RH Pro a vos outils existants pour une experience unifiee. Synchronisation automatique des donnees en temps reel.</p>
+            <p className="text-sm text-white/90 mb-3">Connectez RH Manager a vos outils existants pour une experience unifiee. Synchronisation automatique des donnees en temps reel.</p>
             <div className="flex flex-wrap gap-3 text-xs">
               <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">✓ API REST</span>
               <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">✓ Webhooks</span>

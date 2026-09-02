@@ -17,7 +17,7 @@ export const HomePage = () => {
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-600 bg-clip-text text-transparent">
-                RH Pro
+                RH Manager
               </span>
             </div>
 
@@ -112,7 +112,7 @@ export const HomePage = () => {
                   <div className="w-3 h-3 rounded-full bg-red-400"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                   <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  <div className="text-xs text-slate-400 ml-auto">Dashboard RH Pro</div>
+                  <div className="text-xs text-slate-400 ml-auto">Dashboard RH Manager</div>
                 </div>
                 
                 <div className="space-y-4">
@@ -292,10 +292,10 @@ export const HomePage = () => {
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-500 rounded-xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-white">RH Pro</span>
+              <span className="text-xl font-bold text-white">RH Manager</span>
             </div>
             <div className="text-sm text-slate-400">
-              (c) 2026 RH Pro. Tous droits reserves.
+              (c) 2026 RH Manager. Tous droits reserves.
             </div>
           </div>
         </div>

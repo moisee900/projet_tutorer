@@ -198,7 +198,7 @@ export const HomePage = () => {
             </h2>
             <div className="w-24 h-1.5 bg-gradient-to-r from-primary-600 to-primary-500 mx-auto rounded-full mb-6"></div>
             <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-              Rejoignez l'une des entreprises partenaires de la plateforme RH Pro. Vos compétences méritent le meilleur cadre.
+              Rejoignez l'une des entreprises partenaires de la plateforme RH Manager. Vos compétences méritent le meilleur cadre.
             </p>
           </div>
 

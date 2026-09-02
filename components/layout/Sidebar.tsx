@@ -88,7 +88,7 @@ export const Sidebar = ({ userRole, onLogout, isOpen, onClose }: SidebarProps) =
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-500 rounded-xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold">RH Pro</span>
+              <span className="text-xl font-bold">RH MANAGER</span>
             </div>
             <button onClick={onClose} className="lg:hidden">
               <Menu className="w-6 h-6" />

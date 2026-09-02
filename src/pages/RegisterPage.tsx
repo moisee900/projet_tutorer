@@ -127,7 +127,7 @@ export const RegisterPage = () => {
               <UserPlus className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 dark:text-white mb-2">Créer un compte</h1>
-            <p className="text-slate-600 dark:text-slate-300">Rejoignez RH Pro en quelques étapes</p>
+            <p className="text-slate-600 dark:text-slate-300">Rejoignez RH Manager en quelques étapes</p>
           </div>
 
           <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700">

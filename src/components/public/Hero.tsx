@@ -125,7 +125,7 @@ export const Hero = () => {
                     <div className="w-3 h-3 rounded-full bg-primary-400"></div>
                     <div className="w-3 h-3 rounded-full bg-primary-400"></div>
                   </div>
-                  <div className="text-xs text-slate-400">Dashboard RH Pro</div>
+                  <div className="text-xs text-slate-400">Dashboard RH Manager</div>
                 </div>
 
                 <div className="space-y-4">

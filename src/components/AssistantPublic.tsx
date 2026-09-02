@@ -10,19 +10,19 @@ interface Message {
 }
 
 const responses: Record<string, { text: string; suggestions?: string[] }> = {
-  'bonjour': { text: 'Bonjour ! 👋 Bienvenue sur RH Pro. Comment puis-je vous aider aujourd\'hui ?', suggestions: ['Voir les offres', 'Créer un compte', 'Fonctionnalités'] },
+  'bonjour': { text: 'Bonjour ! 👋 Bienvenue sur RH MANAGER. Comment puis-je vous aider aujourd\'hui ?', suggestions: ['Voir les offres', 'Créer un compte', 'Fonctionnalités'] },
   'salut': { text: 'Salut ! 😊 Ravi de vous voir. Que souhaitez-vous savoir ?', suggestions: ['Offres d\'emploi', 'S\'inscrire', 'Tarifs'] },
   'offres': { text: 'Nous avons plusieurs offres d\'emploi disponibles ! Vous pouvez les consulter sur la page /offres. Nos entreprises partenaires recrutent activement. 🎯', suggestions: ['Voir les offres', 'Comment postuler', 'Types de contrats'] },
   'postuler': { text: 'Pour postuler à une offre : 1️⃣ Consultez les offres sur /offres 2️⃣ Cliquez sur une offre 3️⃣ Remplissez le formulaire de candidature 4️⃣ Attendez la réponse du recruteur. Bonne chance ! 🍀', suggestions: ['Documents requis', 'Délai de réponse', 'Autres questions'] },
   'inscription': { text: 'Pour créer un compte : Cliquez sur "S\'inscrire" en haut à droite. Choisissez votre rôle (Utilisateur ou Directeur). Remplissez vos informations. C\'est gratuit ! ✅', suggestions: ['Rôles disponibles', 'Mot de passe oublié', 'Support'] },
   'compte': { text: 'Vous pouvez créer deux types de comptes : 👤 Utilisateur (pour postuler aux offres) ou 👔 Directeur (pour créer et gérer une entreprise). Lequel vous intéresse ?', suggestions: ['Devenir utilisateur', 'Devenir directeur', 'Comparaison'] },
   'directeur': { text: 'En tant que Directeur, vous pouvez : 🏢 Créer votre entreprise, 📝 Publier des offres d\'emploi, 👥 Gérer vos employés, 📊 Consulter des statistiques avancées. Intéressé ?', suggestions: ['Créer entreprise', 'Fonctionnalités', 'Tarifs'] },
-  'fonctionnalites': { text: 'RH Pro offre : ✅ Gestion complète du personnel, ✅ Recrutement et candidatures, ✅ Paie automatisée, ✅ Évaluations de performance, ✅ Formations, ✅ Messagerie interne, ✅ Archivage sécurisé, et bien plus ! 🚀', suggestions: ['Détails paie', 'Évaluations', 'Messagerie'] },
+  'fonctionnalites': { text: 'RH Manager offre : ✅ Gestion complète du personnel, ✅ Recrutement et candidatures, ✅ Paie automatisée, ✅ Évaluations de performance, ✅ Formations, ✅ Messagerie interne, ✅ Archivage sécurisé, et bien plus ! 🚀', suggestions: ['Détails paie', 'Évaluations', 'Messagerie'] },
   'paie': { text: 'Notre module de paie inclut : 💰 Génération automatique des bulletins, 📊 Calcul des cotisations, 📄 Export comptable, ⏰ Gestion des heures supplémentaires, 🎁 Primes et avantages. Tout est automatisé !', suggestions: ['Démonstration', 'Tarifs', 'Support'] },
   'securite': { text: 'La sécurité est notre priorité : 🔒 Chiffrement AES-256, ✅ Signature électronique eIDAS, 📋 Audit logs complets, 🔐 Authentification 2FA, 🛡️ Conformité RGPD. Vos données sont protégées !', suggestions: ['RGPD', '2FA', 'Certifications'] },
   'support': { text: 'Notre équipe support est disponible : 📧 Email : support@rhpro.com, 📞 Téléphone : +243 988 401 637, 💬 Chat en direct (cette fenêtre !), 📚 Base de connaissances : /kb. Nous répondons sous 24h !', suggestions: ['Contact direct', 'FAQ', 'Documentation'] },
   'prix': { text: 'Nos tarifs : 🆓 Gratuit pour les candidats, 💼 Directeur : 50$/mois par entreprise, 🏢 Entreprise : 200$/mois (illimité employes), 🌟 Premium : 500$/mois (toutes fonctionnalités). Contactez-nous pour un devis personnalisé !', suggestions: ['Essai gratuit', 'Démonstration', 'Contact commercial'] },
-  'merci': { text: 'Avec plaisir ! 😊 N\'hésitez pas si vous avez d\'autres questions. Bonne journée sur RH Pro ! 🌟', suggestions: ['Autre question', 'Voir offres', 'Accueil'] },
+  'merci': { text: 'Avec plaisir ! 😊 N\'hésitez pas si vous avez d\'autres questions. Bonne journée sur RH Manager ! 🌟', suggestions: ['Autre question', 'Voir offres', 'Accueil'] },
   'default': { text: 'Je suis là pour vous aider ! 🤔 Pouvez-vous reformuler votre question ? Je peux vous renseigner sur : les offres d\'emploi, l\'inscription, les fonctionnalités, la paie, la sécurité, ou le support.', suggestions: ['Offres d\'emploi', 'Fonctionnalités', 'Support', 'Tarifs'] }
 };
 
@@ -31,7 +31,7 @@ export const AssistantPublic = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: 'Bonjour ! 👋 Je suis l\'assistant RH Pro. Comment puis-je vous aider aujourd\'hui ?',
+      text: 'Bonjour ! 👋 Je suis l\'assistant RH Manager. Comment puis-je vous aider aujourd\'hui ?',
       sender: 'bot',
       timestamp: new Date(),
       suggestions: ['Voir les offres', 'Créer un compte', 'Fonctionnalités', 'Support']
@@ -120,7 +120,7 @@ export const AssistantPublic = () => {
                 <Bot className="w-8 h-8" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-bold">Assistant RH Pro</h3>
+                <h3 className="text-lg font-bold">Assistant RH Manager</h3>
                 <div className="flex items-center space-x-2 text-sm text-white/90">
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                   <span>En ligne</span>
@@ -231,7 +231,7 @@ export const AssistantPublic = () => {
               </button>
             </div>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 text-center">
-              Propulsé par RH Pro • Répond instantanément
+              Propulsé par RH Manager • Répond instantanément
             </p>
           </div>
         </div>

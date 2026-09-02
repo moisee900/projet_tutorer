@@ -45,7 +45,7 @@ export const DirecteurMentoratPage = () => {
             <Award className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-2">Programme de Mentorat RH Pro</h3>
+            <h3 className="text-lg font-bold mb-2">Programme de Mentorat RH Manager</h3>
             <p className="text-sm text-white/90 mb-3">Accompagnez vos employes dans leur developpement professionnel grace au mentorat</p>
             <div className="flex flex-wrap gap-3 text-xs">
               <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">✓ Binomes personnalises</span>

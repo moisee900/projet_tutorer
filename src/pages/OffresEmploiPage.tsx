@@ -438,9 +438,9 @@ export const OffresEmploiPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
             <Building2 className="w-5 h-5 text-blue-500" />
-            <span className="font-extrabold text-slate-800 dark:text-white text-sm">RH Pro</span>
+            <span className="font-extrabold text-slate-800 dark:text-white text-sm">RH Manager</span>
           </div>
-          <p className="text-xs">© 2026 RH Pro. Tous droits réservés.</p>
+          <p className="text-xs">© 2026 RH Manager. Tous droits réservés.</p>
         </div>
       </footer>
     </div>

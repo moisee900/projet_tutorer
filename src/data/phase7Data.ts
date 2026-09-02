@@ -204,7 +204,7 @@ export const mockTimesheets: Timesheet[] = [
   {
     id: 1, employe_id: 'EMP-001', employe_nom: 'Moise Vita', semaine: '24-30 Juin 2026', statut: 'Brouillon', total_heures: 32,
     projets: [
-      { id: 1, nom: 'Projet RH Pro', client: 'Interne', total_heures: 20, taches: [
+      { id: 1, nom: 'Projet RH Manager', client: 'Interne', total_heures: 20, taches: [
         { id: 1, description: 'Revue architecture', heures: 8, date: '2026-06-24' },
         { id: 2, description: 'Reunions equipe', heures: 12, date: '2026-06-25' }
       ]},
@@ -217,7 +217,7 @@ export const mockTimesheets: Timesheet[] = [
     id: 2, employe_id: 'EMP-003', employe_nom: 'David Kasongo', semaine: '24-30 Juin 2026', statut: 'Soumise', total_heures: 40,
     date_soumission: '2026-06-30',
     projets: [
-      { id: 3, nom: 'Projet RH Pro', client: 'Interne', total_heures: 30, taches: [
+      { id: 3, nom: 'Projet RH Manager', client: 'Interne', total_heures: 30, taches: [
         { id: 4, description: 'Developpement frontend', heures: 20, date: '2026-06-24' },
         { id: 5, description: 'Code review', heures: 10, date: '2026-06-25' }
       ]},
@@ -230,7 +230,7 @@ export const mockTimesheets: Timesheet[] = [
     id: 3, employe_id: 'EMP-005', employe_nom: 'Marie Tshimanga', semaine: '17-23 Juin 2026', statut: 'Approuvee', total_heures: 38,
     date_soumission: '2026-06-23', date_approbation: '2026-06-24',
     projets: [
-      { id: 5, nom: 'Projet RH Pro', client: 'Interne', total_heures: 38, taches: [
+      { id: 5, nom: 'Projet RH Manager', client: 'Interne', total_heures: 38, taches: [
         { id: 7, description: 'Integration API', heures: 25, date: '2026-06-17' },
         { id: 8, description: 'Tests unitaires', heures: 13, date: '2026-06-20' }
       ]}
@@ -240,7 +240,7 @@ export const mockTimesheets: Timesheet[] = [
     id: 4, employe_id: 'EMP-006', employe_nom: 'Jean Ilunga', semaine: '17-23 Juin 2026', statut: 'Rejetee', total_heures: 45,
     date_soumission: '2026-06-23',
     projets: [
-      { id: 6, nom: 'Projet RH Pro', client: 'Interne', total_heures: 45, taches: [
+      { id: 6, nom: 'Projet RH Manager', client: 'Interne', total_heures: 45, taches: [
         { id: 9, description: 'Developpement backend', heures: 45, date: '2026-06-20' }
       ]}
     ]

@@ -184,7 +184,7 @@ export const AdminDashboard = () => {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-600 bg-clip-text text-transparent">RH Pro</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-600 bg-clip-text text-transparent">RH Manager</span>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Super Admin</p>
               </div>
             </div>

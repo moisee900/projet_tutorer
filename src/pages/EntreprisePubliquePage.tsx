@@ -272,7 +272,7 @@ export const EntreprisePubliquePage = () => {
       {/* Footer */}
       <footer className="bg-slate-900 dark:bg-slate-950 text-slate-300 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm">© 2026 RH Pro. Tous droits reserves.</p>
+          <p className="text-sm">© 2026 RH Manager. Tous droits reserves.</p>
         </div>
       </footer>
     </div>

@@ -23,7 +23,7 @@ export const NotFoundPage = () => {
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-2xl shadow-amber-500/30">
                   <Building2 className="h-7 w-7" />
                 </div>
-                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-500 dark:text-slate-400">RH Pro</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-slate-500 dark:text-slate-400">RH Manager</p>
               </div>
 
               <h1 className="max-w-2xl text-4xl font-black leading-tight text-slate-900 dark:text-white sm:text-5xl lg:text-6xl">

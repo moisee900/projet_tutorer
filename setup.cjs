@@ -55,7 +55,7 @@ export const Navbar = () => {
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-              RH Pro
+              RH Manager
             </span>
           </motion.div>
 
@@ -268,7 +268,7 @@ export const Hero = () => {
                     <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
                     <div className="w-3 h-3 rounded-full bg-green-400"></div>
                   </div>
-                  <div className="text-xs text-slate-400">Dashboard RH Pro</div>
+                  <div className="text-xs text-slate-400">Dashboard RH Manager</div>
                 </div>
 
                 <div className="space-y-4">
@@ -310,5 +310,5 @@ export const Hero = () => {
 };
 `);
 
-console.log('\\n?? Tous les fichiers ont été créés avec succès !');
+console.log('\\n?? Tous les fichiers ont ï¿½tï¿½ crï¿½ï¿½s avec succï¿½s !');
 console.log('Lancez : npm run dev');

@@ -29,7 +29,7 @@ export const DirecteurBienEtrePage = () => {
             <Heart className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-2">Programme Bien-etre RH Pro</h3>
+            <h3 className="text-lg font-bold mb-2">Programme Bien-etre RH Manager</h3>
             <p className="text-sm text-white/90 mb-3">Encouragez un mode de vie sain et equilibre au sein de votre entreprise</p>
             <div className="flex flex-wrap gap-3 text-xs">
               <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full">✓ 5 categories</span>

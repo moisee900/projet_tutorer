@@ -99,7 +99,7 @@ export const Footer = () => {
 
         <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="text-sm text-slate-400">
-            © 2026 RH Pro. Tous droits reserves.
+            © 2026 RH Manager. Tous droits reserves.
           </div>
           <div className="flex items-center space-x-4 text-sm text-slate-400">
             <a href="#" className="hover:text-primary-400">Facebook</a>

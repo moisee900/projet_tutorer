@@ -172,7 +172,7 @@ export const LoginPage = () => {
             <div className="relative z-10 flex items-center justify-between">
               <div className="flex items-center space-x-2.5 bg-slate-200/50 dark:bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-slate-300/30 dark:border-white/10">
                 <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 animate-pulse" />
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wide uppercase">Dashboard RH Pro Live</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-200 tracking-wide uppercase">Dashboard RH Manager Live</span>
               </div>
               <div className="flex items-center space-x-1.5 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping"></span>
