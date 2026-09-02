@@ -5,9 +5,8 @@ import { Link } from 'react-router-dom'
 import { 
   Building2, Users, Briefcase, ArrowRight, CheckCircle2, 
   Sparkles, Crown, Star, Zap, Shield, Calendar, MapPin,
-  TrendingUp, Award, Clock, Globe, Rocket, Target,
-  ChevronRight, Play, Pause, BarChart3, PieChart,
-  Cloud, Database, Headphones, Gift, Heart, Coffee
+  TrendingUp, Award, Clock,
+  MoreHorizontal, Home, Menu,
 } from 'lucide-react'
 import { API_BASE_URL } from '../config/api'
 
@@ -232,6 +231,7 @@ export const HomePage = () => {
     }
   })
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const heroRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -414,7 +414,7 @@ export const HomePage = () => {
               <motion.div 
                 whileHover={{ y: -8 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-slate-200 dark:border-slate-700"
+                className="dashboard-float relative p-6 sm:p-8 rounded-[2rem] bg-white/[0.16] dark:bg-slate-800/[0.16] backdrop-blur-[2px]"
               >
                 <div className="flex items-center space-x-2 mb-6">
                   <motion.div 
@@ -446,21 +446,28 @@ export const HomePage = () => {
                     </motion.div>
                   </div>
                   
-                  {/* Graphique avec animation */}
-                  <div className="flex items-end space-x-2 h-32 pt-4">
-                    {stats.graphique.hauteurs.map((height, i) => (
-                      <motion.div 
-                        key={i} 
-                        initial={{ height: 0 }}
-                        animate={{ height: `${Math.max(height, 5)}%` }}
-                        transition={{ delay: i * 0.05, duration: 1, ease: "easeOut" }}
-                        className="group relative flex-1 bg-gradient-to-t from-primary-500 to-primary-400 rounded-t-lg opacity-80 hover:opacity-100 transition-all cursor-pointer"
-                      >
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 text-white text-[10px] py-1.5 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-10 border border-slate-700">
-                          {stats.graphique.labels[i]} : {stats.graphique.valeurs[i]} recrutement(s)
-                        </div>
-                      </motion.div>
+                  {/* Graphique artistique : grille lumineuse, aurore et barres */}
+                  <div className="relative h-40 overflow-hidden rounded-2xl border border-primary-100/70 bg-transparent px-3 pt-4 shadow-inner dark:border-primary-900/40">
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(168,85,247,.22),transparent_42%),radial-gradient(circle_at_20%_100%,rgba(14,165,233,.16),transparent_45%)]" />
+                    {[0, 1, 2, 3].map((line) => (
+                      <div key={line} className="pointer-events-none absolute left-3 right-3 border-t border-dashed border-slate-300/50 dark:border-slate-600/40" style={{ top: `${22 + line * 22}%` }} />
                     ))}
+                    <div className="relative z-10 flex h-full items-end gap-1.5 sm:gap-2">
+                      {stats.graphique.hauteurs.map((height, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: `${Math.max(height, 7)}%`, opacity: 1 }}
+                          transition={{ delay: i * 0.07, duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
+                          className="group relative flex-1 cursor-pointer rounded-t-[0.65rem] bg-gradient-to-t from-primary-600 via-violet-500 to-fuchsia-400 shadow-[0_-4px_16px_rgba(139,92,246,.35)] transition-all duration-300 hover:brightness-125 hover:shadow-[0_-6px_24px_rgba(217,70,239,.55)]"
+                        >
+                          <motion.span className="absolute inset-x-1 top-1 h-1 rounded-full bg-white/50" animate={{ opacity: [0.35, 0.8, 0.35] }} transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.12 }} />
+                          <div className="absolute bottom-full left-1/2 z-20 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-xl border border-white/20 bg-slate-950/95 px-3 py-2 text-[10px] font-semibold text-white shadow-2xl group-hover:block">
+                            <span className="text-fuchsia-300">{stats.graphique.labels[i]}</span><br />{stats.graphique.valeurs[i]} recrutement(s)
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="flex justify-between text-[9px] font-semibold text-slate-400 dark:text-slate-500 px-1">
@@ -471,7 +478,7 @@ export const HomePage = () => {
                     ))}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="grid grid-cols-2 gap-8 mt-6">
                     {[
                       { label: 'Contrats actifs', value: stats.contrats_actifs },
                       { label: 'Nouveaux ce mois', value: stats.nouveaux_contrats },
@@ -479,7 +486,7 @@ export const HomePage = () => {
                       <motion.div 
                         key={index}
                         whileHover={{ scale: 1.02 }}
-                        className="bg-gradient-to-br from-primary-50 to-primary-100/50 dark:from-primary-900/30 dark:to-primary-900/30 p-4 rounded-2xl border border-primary-200 dark:border-primary-800"
+                        className="dashboard-stat-float py-3 px-1"
                       >
                         <div className="text-xs font-semibold text-primary-600 dark:text-primary-300">{item.label}</div>
                         <div className="text-2xl font-bold text-primary-700 dark:text-primary-200">
@@ -782,6 +789,33 @@ export const HomePage = () => {
         </div>
       </footer>
 
+      {/* Navigation mobile façon application */}
+      <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 18, scale: .96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: .96 }}
+              className="mb-3 flex justify-center gap-2 rounded-2xl bg-slate-900/90 p-2 shadow-2xl backdrop-blur-xl"
+            >
+              <Link to="/offres" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Offres</Link>
+              <Link to="/features" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Fonctionnalités</Link>
+              <Link to="/register" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Inscription</Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <nav className="flex items-center justify-around rounded-2xl border border-white/15 bg-slate-900/80 px-2 py-2 shadow-2xl backdrop-blur-xl">
+          <Link to="/" aria-label="Accueil" className="rounded-xl p-3 text-primary-300 hover:bg-white/10"><Home className="h-5 w-5" /></Link>
+          <Link to="/offres" aria-label="Offres" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Briefcase className="h-5 w-5" /></Link>
+          <button aria-label="Ouvrir le menu" onClick={() => setIsMobileMenuOpen(value => !value)} className="-mt-7 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 p-4 text-white shadow-lg shadow-primary-500/40 ring-4 ring-slate-900/80">
+            {isMobileMenuOpen ? <Menu className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
+          </button>
+          <Link to="/entreprise/inscription" aria-label="Créer une entreprise" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Building2 className="h-5 w-5" /></Link>
+          <Link to="/register" aria-label="Compte" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Users className="h-5 w-5" /></Link>
+        </nav>
+      </div>
+
       {/* Styles CSS supplémentaires */}
       <style>{`
         @keyframes gradient {
@@ -790,6 +824,17 @@ export const HomePage = () => {
         }
         .bg-300 { background-size: 300% 300%; }
         .animate-gradient { animation: gradient 6s ease infinite; }
+        .dashboard-float {
+          animation: dashboardFloat 7s ease-in-out infinite;
+        }
+        .dashboard-stat-float {
+          animation: statFloat 5s ease-in-out infinite;
+          border-bottom: 1px solid rgba(139, 92, 246, .22);
+        }
+        .dashboard-stat-float:nth-child(2) { animation-delay: .7s; }
+        @keyframes dashboardFloat { 0%,100% { transform: translateY(0) rotateX(0); } 50% { transform: translateY(-8px) rotateX(1deg); } }
+        @keyframes statFloat { 0%,100% { transform: translateY(0); filter: drop-shadow(0 0 0 transparent); } 50% { transform: translateY(-4px); filter: drop-shadow(0 8px 14px rgba(124,58,237,.18)); } }
+        @media (prefers-reduced-motion: reduce) { .dashboard-float, .dashboard-stat-float { animation: none; } }
       `}</style>
     </div>
   )
