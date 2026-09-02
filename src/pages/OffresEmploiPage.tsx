@@ -1,15 +1,208 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { 
-  Briefcase, Search, MapPin, DollarSign, Clock, Eye, 
+  Briefcase, Search, MapPin, DollarSign, 
   Building2, Sun, Moon, Sparkles, Filter, AlertCircle,
-  TrendingUp, Users, CheckCircle2, ArrowRight, Menu, X
+  TrendingUp, Users, CheckCircle2, ArrowRight, Menu, X,
+  Calendar, Shield, Zap, Star, Crown, MoreHorizontal, Home
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, useAnimation, useInView, AnimatePresence } from 'framer-motion'
 import { offreAPI, entrepriseAPI } from '../services/api'
 import { BrandMark } from '../components/BrandMark'
 
-const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+const money = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+
+// Animations variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1
+    }
+  }
+}
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 20,
+      duration: 0.8
+    }
+  }
+}
+
+const fadeInLeft = {
+  hidden: { opacity: 0, x: -60 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 80,
+      damping: 25,
+      duration: 0.9
+    }
+  }
+}
+
+const fadeInRight = {
+  hidden: { opacity: 0, x: 60 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 80,
+      damping: 25,
+      duration: 0.9
+    }
+  }
+}
+
+const fadeInDown = {
+  hidden: { opacity: 0, y: -40, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 20,
+      duration: 0.8
+    }
+  }
+}
+
+const fadeInUpStagger = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.06,
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1]
+    }
+  })
+}
+
+const pulseGlow = {
+  scale: [1, 1.02, 1],
+  opacity: [0.6, 0.8, 0.6],
+  transition: {
+    duration: 3,
+    repeat: Infinity,
+    ease: "easeInOut"
+  }
+}
+
+const staggerChildren = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1
+    }
+  }
+}
+
+// Composant compteur animé
+const AnimatedCounter = ({ target, duration = 2000, suffix = '', prefix = '' }: { target: number, duration?: number, suffix?: string, prefix?: string }) => {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-100px" })
+
+  useEffect(() => {
+    if (isInView) {
+      let startTime: number
+      let animationFrame: number
+
+      const animate = (timestamp: number) => {
+        if (!startTime) startTime = timestamp
+        const progress = Math.min((timestamp - startTime) / duration, 1)
+        const eased = 1 - Math.pow(1 - progress, 3)
+        setCount(Math.floor(eased * target))
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(animate)
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animate)
+      return () => cancelAnimationFrame(animationFrame)
+    }
+  }, [isInView, target, duration])
+
+  return (
+    <span ref={ref} className="tabular-nums">
+      {prefix}{count.toLocaleString()}{suffix}
+    </span>
+  )
+}
+
+// Composant FeatureCard amélioré
+const FeatureCard = ({ icon: Icon, title, desc, color, delay = 0 }: any) => {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [rotate, setRotate] = useState({ x: 0, y: 0 })
+  const [isHovered, setIsHovered] = useState(false)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width - 0.5
+    const y = (e.clientY - rect.top) / rect.height - 0.5
+    setRotate({ x: y * -8, y: x * 8 })
+  }
+
+  return (
+    <motion.div
+      ref={cardRef}
+      custom={delay}
+      variants={fadeInUpStagger}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setRotate({ x: 0, y: 0 }) }}
+      onMouseMove={handleMouseMove}
+      style={{ transform: `perspective(800px) rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)` }}
+      className="group relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-slate-200/60 dark:border-slate-700/60 overflow-hidden"
+    >
+      <motion.div 
+        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        animate={{
+          x: isHovered ? ['-100%', '100%'] : '-100%',
+          transition: { duration: 0.8, ease: "easeInOut" }
+        }}
+      />
+      
+      <motion.div 
+        className={`absolute -inset-1 bg-gradient-to-r ${color} opacity-0 group-hover:opacity-10 blur-2xl transition-opacity duration-700`}
+      />
+
+      <div className="relative z-10">
+        <motion.div 
+          whileHover={{ rotate: 360, scale: 1.1 }}
+          transition={{ duration: 0.6, type: "spring" }}
+          className={`w-16 h-16 bg-gradient-to-br ${color} rounded-2xl flex items-center justify-center shadow-xl mb-6`}
+        >
+          <Icon className="w-8 h-8 text-white" />
+        </motion.div>
+        <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">{title}</h3>
+        <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{desc}</p>
+      </div>
+    </motion.div>
+  )
+}
 
 export const OffresEmploiPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -17,19 +210,18 @@ export const OffresEmploiPage = () => {
   const [offres, setOffres] = useState<any[]>([])
   const [entreprises, setEntreprises] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [isMenuOpen, setIsMenuOpen] = useState(false) // État pour le menu mobile
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('theme') === 'dark' || 
       (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
   })
-
-  // Statistiques calculées dynamiquement à partir des données reçues de l'API
   const [statsOffres, setStatsOffres] = useState({
     totalActives: 0,
     entreprisesPartenaires: 0,
     salaireMoyen: 0,
-    postulationsRapides: 98 // Taux d'acceptation fictif ou statistique fixe
+    postulationsRapides: 98
   })
+  const heroRef = useRef<HTMLDivElement>(null)
 
   // Gestion du Mode Sombre
   useEffect(() => {
@@ -41,6 +233,25 @@ export const OffresEmploiPage = () => {
       localStorage.setItem('theme', 'light')
     }
   }, [darkMode])
+
+  // Effet parallaxe sur le hero
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!heroRef.current) return
+      const rect = heroRef.current.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width - 0.5
+      const y = (e.clientY - rect.top) / rect.height - 0.5
+      
+      const elements = heroRef.current.querySelectorAll('.parallax')
+      elements.forEach((el: any) => {
+        const speed = parseFloat(el.dataset.speed || '1')
+        el.style.transform = `translate(${x * speed * 20}px, ${y * speed * 20}px)`
+      })
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    return () => document.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   // Chargement des données
   useEffect(() => {
@@ -68,11 +279,9 @@ export const OffresEmploiPage = () => {
         setOffres(rawOffres)
         setEntreprises(rawEntreprises)
 
-        // Calcul des statistiques réelles à la volée
         const total = rawOffres.length
         const uniqueEntreprises = new Set(rawOffres.map((o: any) => o.id_entreprise)).size
         
-        // Calcul du salaire de base moyen
         const salaires = rawOffres.map((o: any) => Number(o.salaire_base)).filter((s: number) => !isNaN(s) && s > 0)
         const moyenne = salaires.length > 0 ? Math.round(salaires.reduce((a: number, b: number) => a + b, 0) / salaires.length) : 0
 
@@ -87,12 +296,6 @@ export const OffresEmploiPage = () => {
         console.error("Erreur de chargement", error)
         setOffres([])
         setEntreprises([])
-        setStatsOffres({
-          totalActives: 0,
-          entreprisesPartenaires: 0,
-          salaireMoyen: 0,
-          postulationsRapides: 98,
-        })
       } finally {
         setLoading(false)
       }
@@ -104,19 +307,19 @@ export const OffresEmploiPage = () => {
   // Filtrage intelligent
   const filteredOffres = offres.filter(offre => {
     const matchesSearch = 
-      offre.titre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      offre.description.toLowerCase().includes(searchTerm.toLowerCase())
+      offre.titre?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      offre.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      offre.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
 
     const matchesType = filterType === 'all' || (offre.type_contrat && offre.type_contrat.toLowerCase() === filterType.toLowerCase())
 
     return matchesSearch && matchesType
   })
 
-  // Extraction dynamique des types de contrat pour le bouton de filtrage
   const typesContrats = ['all', ...Array.from(new Set(offres.map(o => o.type_contrat).filter(Boolean)))]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-primary-50/20 dark:from-slate-950 dark:via-slate-900/40 dark:to-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-primary-50/30 dark:from-slate-900 dark:via-primary-900/10 dark:to-primary-900/10 overflow-x-hidden transition-colors duration-300">
       
       {/* --- HEADER --- */}
       <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
@@ -128,9 +331,9 @@ export const OffresEmploiPage = () => {
 
             {/* Navigation Desktop */}
             <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-slate-600 dark:text-slate-300">
-              <Link to="/offres" className="text-blue-600 dark:text-blue-400 transition-colors">Offres d'emploi</Link>
-              <Link to="/entreprises" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Entreprises</Link>
-              <Link to="/conseils" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Conseils Carrière</Link>
+              <Link to="/offres" className="text-primary-600 dark:text-primary-400 transition-colors">Offres d'emploi</Link>
+              <Link to="/entreprises" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Entreprises</Link>
+              <Link to="/conseils" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Conseils Carrière</Link>
             </nav>
 
             <div className="flex items-center space-x-4">
@@ -142,17 +345,15 @@ export const OffresEmploiPage = () => {
                 {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* Boutons Desktop */}
               <div className="hidden md:flex items-center space-x-2 border-l border-slate-200 dark:border-slate-800 pl-4">
-                <Link to="/login" className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <Link to="/login" className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
                   Connexion
                 </Link>
-                <Link to="/register" className="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md shadow-blue-500/10 hover:shadow-blue-500/20 transition-all">
+                <Link to="/register" className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 text-white rounded-lg shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 transition-all">
                   S'inscrire
                 </Link>
               </div>
 
-              {/* Bouton Hamburger Mobile */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="p-2 md:hidden rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all"
@@ -164,7 +365,7 @@ export const OffresEmploiPage = () => {
           </div>
         </div>
 
-        {/* --- MENU MOBILE DÉROULANT --- */}
+        {/* --- MENU MOBILE --- */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
@@ -179,21 +380,21 @@ export const OffresEmploiPage = () => {
                   <Link 
                     to="/offres" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="py-2 text-blue-600 dark:text-blue-400 border-b border-slate-100 dark:border-slate-800/50"
+                    className="py-2 text-primary-600 dark:text-primary-400 border-b border-slate-100 dark:border-slate-800/50"
                   >
                     Offres d'emploi
                   </Link>
                   <Link 
                     to="/entreprises" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="py-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-b border-slate-100 dark:border-slate-800/50"
+                    className="py-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 border-b border-slate-100 dark:border-slate-800/50"
                   >
                     Entreprises
                   </Link>
                   <Link 
                     to="/conseils" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="py-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border-b border-slate-100 dark:border-slate-800/50"
+                    className="py-2 text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 border-b border-slate-100 dark:border-slate-800/50"
                   >
                     Conseils Carrière
                   </Link>
@@ -210,7 +411,7 @@ export const OffresEmploiPage = () => {
                   <Link 
                     to="/register" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full text-center py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md"
+                    className="w-full text-center py-2.5 text-sm font-semibold bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-lg shadow-lg"
                   >
                     S'inscrire
                   </Link>
@@ -221,66 +422,141 @@ export const OffresEmploiPage = () => {
         </AnimatePresence>
       </header>
 
-      {/* --- HERO SECTION --- */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-primary-100/30 via-white to-transparent dark:from-primary-950/20 dark:via-slate-950 dark:to-transparent py-16">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[300px] bg-blue-500/10 dark:bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
-        
-        <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-50 dark:bg-blue-950/50 border border-blue-200/50 dark:border-blue-800/30 rounded-full text-blue-600 dark:text-blue-400 text-xs font-semibold mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Nouveau : Postulez en 1 clic sans CV physique</span>
-          </div>
-
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-6">
-            Trouvez votre <span className="bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">emploi de rêve</span>
-          </h2>
-          
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto">
-            Explorez les opportunités exclusives publiées par des entreprises en pleine croissance.
-          </p>
-
-          {/* Barre de Recherche */}
-          <div className="max-w-2xl mx-auto mb-12">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Rechercher un poste, un mot-clé ou une entreprise..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-100 dark:shadow-none border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 text-base"
-              />
-            </div>
-          </div>
-
-          {/* --- SECTION STATISTIQUE STYLISÉE --- */}
-          <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 p-2">
-            {[
-              { label: "Offres Actives", val: loading ? "..." : statsOffres.totalActives, icon: Briefcase, color: "text-blue-500 bg-blue-500/10" },
-              { label: "Partenaires", val: loading ? "..." : `${statsOffres.entreprisesPartenaires}+`, icon: Building2, color: "text-primary-500 bg-primary-500/10" },
-              { label: "Moyenne Salaires", val: loading ? "..." : money.format(statsOffres.salaireMoyen), icon: TrendingUp, color: "text-primary-600 bg-primary-500/10" },
-              { label: "Candidatures simples", val: `${statsOffres.postulationsRapides}%`, icon: CheckCircle2, color: "text-amber-500 bg-amber-500/10" }
-            ].map((stat, idx) => (
-              <div 
-                key={idx} 
-                className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-sm p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-sm hover:shadow-md transition-all flex flex-col items-center justify-center text-center"
-              >
-                <div className={`p-2.5 rounded-xl ${stat.color} mb-3`}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-                <div className="text-2xl font-black text-slate-800 dark:text-white">{stat.val}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+      {/* --- HERO SECTION AMÉLIORÉE --- */}
+      <motion.section 
+        ref={heroRef}
+        initial="hidden"
+        animate="visible"
+        className="relative overflow-hidden py-20"
+      >
+        {/* Effet de fond animé */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div 
+            className="absolute top-20 left-10 w-96 h-96 bg-primary-200/30 dark:bg-primary-900/20 rounded-full blur-3xl"
+            animate={pulseGlow}
+          />
+          <motion.div 
+            className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-primary-200/30 dark:bg-primary-900/20 rounded-full blur-3xl"
+            animate={{
+              ...pulseGlow,
+              transition: { ...pulseGlow.transition, delay: 0.5 }
+            }}
+          />
         </div>
-      </section>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            variants={containerVariants}
+            className="text-center max-w-4xl mx-auto"
+          >
+            <motion.div 
+              variants={fadeInDown}
+              className="inline-flex items-center space-x-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm px-5 py-2.5 rounded-full shadow-lg border border-primary-200 dark:border-primary-800 mb-6"
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              >
+                <Sparkles className="w-5 h-5 text-primary-600" />
+              </motion.div>
+              <span className="text-sm font-bold text-primary-700 dark:text-primary-300">
+                {filteredOffres.length} offres disponibles
+              </span>
+            </motion.div>
+
+            <motion.h2 
+              variants={fadeInLeft}
+              className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white mb-6"
+            >
+              Trouvez votre{' '}
+              <span className="bg-gradient-to-r from-primary-600 via-purple-600 to-primary-600 bg-clip-text text-transparent animate-gradient bg-300">
+                emploi de rêve
+              </span>
+            </motion.h2>
+            
+            <motion.p 
+              variants={fadeInUp}
+              className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-xl mx-auto"
+            >
+              Explorez les opportunités exclusives publiées par des entreprises en pleine croissance.
+            </motion.p>
+
+            {/* Barre de Recherche améliorée */}
+            <motion.div 
+              variants={fadeInUp}
+              className="max-w-2xl mx-auto mb-12"
+            >
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Rechercher un poste, un mot-clé ou une entreprise..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-4 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-slate-100 dark:shadow-none border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 text-base"
+                />
+                <motion.div
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <button className="px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl text-sm font-semibold shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 transition-all">
+                    Rechercher
+                  </button>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* --- STATISTIQUES AMÉLIORÉES --- */}
+            <motion.div 
+              variants={fadeInUp}
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto"
+            >
+              {[
+                { label: "Offres Actives", val: statsOffres.totalActives, icon: Briefcase, color: "from-primary-500 to-primary-600" },
+                { label: "Entreprises", val: `${statsOffres.entreprisesPartenaires}+`, icon: Building2, color: "from-purple-500 to-purple-600" },
+                { label: "Salaire Moyen", val: loading ? "..." : money.format(statsOffres.salaireMoyen), icon: TrendingUp, color: "from-emerald-500 to-emerald-600" },
+                { label: "Candidatures simples", val: `${statsOffres.postulationsRapides}%`, icon: CheckCircle2, color: "from-amber-500 to-amber-600" }
+              ].map((stat, idx) => (
+                <motion.div
+                  key={idx}
+                  custom={idx}
+                  variants={fadeInUpStagger}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  className="group bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-sm hover:shadow-xl transition-all duration-300"
+                >
+                  <motion.div
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.6 }}
+                    className={`w-12 h-12 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20 mx-auto mb-3`}
+                  >
+                    <stat.icon className="w-5 h-5 text-white" />
+                  </motion.div>
+                  <div className="text-2xl font-black text-slate-800 dark:text-white">
+                    {loading ? "..." : typeof stat.val === 'number' ? (
+                      <AnimatedCounter target={stat.val} duration={2000} />
+                    ) : stat.val}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{stat.label}</div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* --- CORPS PRINCIPAL --- */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Barre de Filtres Dynamiques */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 mb-8 border-b border-slate-200 dark:border-slate-800">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-8 mb-8 border-b border-slate-200 dark:border-slate-800"
+        >
           <div className="flex items-center space-x-2">
             <Filter className="w-4 h-4 text-slate-400" />
             <span className="font-semibold text-slate-800 dark:text-slate-200">Filtrer par contrat :</span>
@@ -288,20 +564,22 @@ export const OffresEmploiPage = () => {
           
           <div className="flex flex-wrap gap-2">
             {typesContrats.map((type) => (
-              <button
+              <motion.button
                 key={type}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setFilterType(type)}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                   filterType === type
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                    ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-lg shadow-primary-500/20'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:border-primary-300 dark:hover:border-primary-700'
                 }`}
               >
                 {type === 'all' ? 'Tous les contrats' : type.toUpperCase()}
-              </button>
+              </motion.button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Titre dynamique */}
         <div className="flex items-center justify-between mb-8">
@@ -313,25 +591,52 @@ export const OffresEmploiPage = () => {
           </span>
         </div>
 
-        {/* --- GRID OFFRES --- */}
+        {/* --- GRID OFFRES AMÉLIORÉE --- */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-10 h-10 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Recherche des offres en cours...</p>
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+              className="relative"
+            >
+              <div className="w-16 h-16 rounded-full border-4 border-primary-200 dark:border-primary-900/30 border-t-primary-600 dark:border-t-primary-400"></div>
+              <motion.div 
+                className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary-300 dark:border-t-primary-200"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              />
+            </motion.div>
+            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Chargement des offres...</span>
           </div>
         ) : filteredOffres.length === 0 ? (
-          <div className="text-center py-20 max-w-sm mx-auto">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-slate-400" />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20 max-w-sm mx-auto"
+          >
+            <div className="w-20 h-20 bg-slate-100 dark:bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-slate-400" />
             </div>
-            <h4 className="text-lg font-bold text-slate-800 dark:text-slate-200">Aucun résultat</h4>
+            <h4 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Aucun résultat</h4>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-              Aucune offre n'est disponible pour le moment avec ces critères.
+              Aucune offre ne correspond à vos critères de recherche.
             </p>
-          </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { setSearchTerm(''); setFilterType('all'); }}
+              className="mt-6 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl font-semibold shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30 transition-all"
+            >
+              Réinitialiser les filtres
+            </motion.button>
+          </motion.div>
         ) : (
           <motion.div 
             layout
+            variants={staggerChildren}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <AnimatePresence>
@@ -343,28 +648,51 @@ export const OffresEmploiPage = () => {
                 return (
                   <motion.div
                     layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
+                    variants={fadeInUpStagger}
+                    custom={index}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 300 }}
                     key={offre.id_offre}
-                    className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 dark:border-slate-800/80 hover:border-blue-500/40 dark:hover:border-blue-500/30 shadow-md hover:shadow-xl hover:shadow-blue-500/[0.02] dark:hover:shadow-blue-500/[0.01] transition-all duration-300 flex flex-col justify-between"
+                    className="group relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 dark:border-slate-800/80 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden"
                   >
-                    {/* Effet lumineux subtil en haut de la carte au survol */}
-                    <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-2xl" />
+                    {/* Effet de brillance */}
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                      animate={{
+                        x: ['-100%', '100%'],
+                        transition: {
+                          duration: 3,
+                          repeat: Infinity,
+                          ease: "linear",
+                          delay: index * 0.2
+                        }
+                      }}
+                    />
 
-                    <div>
+                    {/* Glow au survol */}
+                    <motion.div 
+                      className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700"
+                    />
+
+                    <div className="relative z-10">
                       {/* En-tête de carte */}
                       <div className="flex items-start justify-between mb-4">
-                        <div className="w-11 h-11 bg-gradient-to-br from-primary-50 to-primary-50 dark:from-slate-800 dark:to-slate-800 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center font-bold shadow-inner">
+                        <motion.div 
+                          whileHover={{ rotate: 360, scale: 1.1 }}
+                          transition={{ duration: 0.6 }}
+                          className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-900/40 dark:to-primary-800/40 text-primary-600 dark:text-primary-400 rounded-xl flex items-center justify-center font-bold shadow-inner"
+                        >
                           {entreprise?.nom ? (
-                            <span className="text-lg">{entreprise.nom.charAt(0).toUpperCase()}</span>
+                            <span className="text-lg font-extrabold">{entreprise.nom.charAt(0).toUpperCase()}</span>
                           ) : (
                             <Briefcase className="w-5 h-5" />
                           )}
-                        </div>
+                        </motion.div>
                         <div className="flex flex-col items-end space-y-1.5">
-                          <span className="px-2.5 py-1 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 rounded-full text-[10px] font-bold tracking-wide uppercase border border-green-200/30">
+                          <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-full text-[10px] font-bold tracking-wide uppercase border border-emerald-200/30">
                             {offre.statut || "Actif"}
                           </span>
                           {offre.type_contrat && (
@@ -376,19 +704,19 @@ export const OffresEmploiPage = () => {
                       </div>
 
                       {/* Corps de carte */}
-                      <h4 className="text-lg font-bold text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1 mb-2">
+                      <h4 className="text-lg font-bold text-slate-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-1 mb-2">
                         {offre.titre}
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                      <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 mb-4 leading-relaxed">
                         {offre.description}
                       </p>
 
                       {/* Métadonnées */}
                       <div className="space-y-2.5 mb-6">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          <Building2 className="w-4 h-4 text-slate-400" />
+                          <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
                           {entreprise?.code_entreprise ? (
-                            <Link to={`/entreprise/${entreprise.code_entreprise}`} className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            <Link to={`/entreprise/${entreprise.code_entreprise}`} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors truncate">
                               {entreprise.nom}
                             </Link>
                           ) : (
@@ -397,12 +725,12 @@ export const OffresEmploiPage = () => {
                         </div>
                         
                         <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
-                          <MapPin className="w-4 h-4 text-slate-400" />
-                          <span>{entreprise?.adresse || 'Télétravail / Distanciel'}</span>
+                          <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                          <span className="truncate">{entreprise?.adresse || 'Télétravail / Distanciel'}</span>
                         </div>
                         
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-                          <DollarSign className="w-4 h-4 text-emerald-500" />
+                          <DollarSign className="w-4 h-4 text-emerald-500 shrink-0" />
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                             {salaireFormate ? money.format(Number(offre.salaire_base)) : 'À négocier'}
                           </span>
@@ -411,19 +739,21 @@ export const OffresEmploiPage = () => {
                     </div>
 
                     {/* Pied de carte */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                    <div className="relative z-10 flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/60">
                       <span className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center space-x-1">
-                        <Clock className="w-3.5 h-3.5" />
+                        <Calendar className="w-3.5 h-3.5" />
                         <span>Expire le : {dateLimite}</span>
                       </span>
                       
-                      <Link 
-                        to={`/offres/${offre.id_offre}`} 
-                        className="px-3.5 py-2 bg-slate-100 hover:bg-blue-600 dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white rounded-lg text-xs font-bold flex items-center space-x-1 transition-all"
-                      >
-                        <span>Détails</span>
-                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                      </Link>
+                      <motion.div whileHover={{ x: 5 }}>
+                        <Link 
+                          to={`/offres/${offre.id_offre}`} 
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-gradient-to-r hover:from-primary-600 hover:to-primary-500 dark:bg-slate-800 dark:hover:bg-gradient-to-r dark:hover:from-primary-600 dark:hover:to-primary-500 text-slate-700 hover:text-white dark:text-slate-300 dark:hover:text-white rounded-lg text-xs font-bold flex items-center space-x-1 transition-all"
+                        >
+                          <span>Détails</span>
+                          <ArrowRight className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                      </motion.div>
                     </div>
                   </motion.div>
                 )
@@ -433,16 +763,178 @@ export const OffresEmploiPage = () => {
         )}
       </section>
 
-      {/* --- FOOTER --- */}
-      <footer className="bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 py-10 mt-20 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <Building2 className="w-5 h-5 text-blue-500" />
-            <span className="font-extrabold text-slate-800 dark:text-white text-sm">RH Manager</span>
+      {/* --- SECTION FONCTIONNALITÉS --- */}
+      <motion.section 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        className="py-20 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            variants={fadeInUp}
+            className="text-center mb-16"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="w-24 h-1.5 bg-gradient-to-r from-primary-600 to-primary-500 mx-auto rounded-full mb-6"
+            />
+            <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-800 dark:text-white mb-4">
+              Pourquoi choisir{' '}
+              <span className="bg-gradient-to-r from-primary-600 via-purple-600 to-primary-600 bg-clip-text text-transparent animate-gradient bg-300">
+                RH Manager
+              </span>
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+              La plateforme qui simplifie votre recherche d'emploi et accélère votre carrière.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { icon: Zap, title: "Recherche rapide", desc: "Trouvez l'offre parfaite en quelques secondes grâce à notre moteur intelligent.", color: "from-primary-500 to-primary-600" },
+              { icon: Shield, title: "Postulation sécurisée", desc: "Vos données sont protégées et vos candidatures restent confidentielles.", color: "from-purple-500 to-purple-600" },
+              { icon: Star, title: "Suivi personnalisé", desc: "Recevez des recommandations et suivez l'avancement de vos candidatures.", color: "from-amber-500 to-amber-600" },
+            ].map((feature, index) => (
+              <FeatureCard 
+                key={index}
+                icon={feature.icon}
+                title={feature.title}
+                desc={feature.desc}
+                color={feature.color}
+                delay={index}
+              />
+            ))}
           </div>
-          <p className="text-xs">© 2026 RH Manager. Tous droits réservés.</p>
+        </div>
+      </motion.section>
+
+      {/* --- SECTION CTA --- */}
+      <motion.section 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        className="py-20 bg-gradient-to-br from-primary-50 via-purple-50 to-primary-50 dark:from-primary-900/20 dark:via-purple-900/20 dark:to-primary-900/20 relative overflow-hidden"
+      >
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-purple-500/5"
+          animate={pulseGlow}
+        />
+
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div 
+            variants={fadeInUp}
+            className="inline-flex items-center space-x-2 bg-amber-100 dark:bg-amber-900/30 px-5 py-2.5 rounded-full shadow-lg border border-amber-200 dark:border-amber-800 mb-6"
+          >
+            <Crown className="w-5 h-5 text-amber-600" />
+            <span className="text-sm font-bold text-amber-700 dark:text-amber-300">Prêt à décrocher l'emploi de vos rêves ?</span>
+          </motion.div>
+          
+          <motion.h2 
+            variants={fadeInUp}
+            className="text-4xl sm:text-5xl font-extrabold text-slate-800 dark:text-white mb-4"
+          >
+            Rejoignez la communauté
+            <br />
+            <span className="bg-gradient-to-r from-primary-600 via-purple-600 to-primary-600 bg-clip-text text-transparent animate-gradient bg-300">
+              RH Manager
+            </span>
+          </motion.h2>
+          
+          <motion.p 
+            variants={fadeInUp}
+            className="text-lg text-slate-600 dark:text-slate-300 mb-8"
+          >
+            Des milliers de candidats vous ont déjà précédé. Créez votre compte et commencez votre recherche dès aujourd'hui.
+          </motion.p>
+
+          <motion.div
+            variants={fadeInUp}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link to="/register" className="group inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-primary-600 via-purple-600 to-primary-600 hover:from-primary-700 hover:via-purple-700 hover:to-primary-700 text-white font-bold text-lg rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:-translate-y-1">
+                <span>Créer mon compte</span>
+                <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link to="/login" className="inline-flex items-center justify-center px-10 py-5 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-lg rounded-full shadow-xl hover:shadow-2xl border-2 border-slate-200 dark:border-slate-700 transition-all">
+                <span>Se connecter</span>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* --- FOOTER --- */}
+      <footer className="bg-slate-900 dark:bg-slate-950 text-slate-300 py-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              className="flex items-center space-x-3 mb-4 md:mb-0"
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25">
+                <Building2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-xl font-bold text-white">RH Manager</span>
+                <p className="text-xs text-slate-400">Recrutement & Carrière</p>
+              </div>
+            </motion.div>
+            <div className="text-sm text-slate-400">© 2026 RH Manager. Tous droits réservés.</div>
+          </div>
         </div>
       </footer>
+
+      {/* Navigation mobile */}
+      <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 18, scale: .96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: .96 }}
+              className="mb-3 flex justify-center gap-2 rounded-2xl bg-slate-900/90 p-2 shadow-2xl backdrop-blur-xl"
+            >
+              <Link to="/offres" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Offres</Link>
+              <Link to="/entreprises" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Entreprises</Link>
+              <Link to="/register" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Inscription</Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <nav className="flex items-center justify-around rounded-2xl border border-white/15 bg-slate-900/80 px-2 py-2 shadow-2xl backdrop-blur-xl">
+          <Link to="/" aria-label="Accueil" className="rounded-xl p-3 text-primary-300 hover:bg-white/10"><Home className="h-5 w-5" /></Link>
+          <Link to="/offres" aria-label="Offres" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Briefcase className="h-5 w-5" /></Link>
+          <button aria-label="Ouvrir le menu" onClick={() => setIsMenuOpen(!isMenuOpen)} className="-mt-7 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 p-4 text-white shadow-lg shadow-primary-500/40 ring-4 ring-slate-900/80">
+            {isMenuOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
+          </button>
+          <Link to="/entreprise/inscription" aria-label="Créer une entreprise" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Building2 className="h-5 w-5" /></Link>
+          <Link to="/register" aria-label="Compte" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Users className="h-5 w-5" /></Link>
+        </nav>
+      </div>
+
+      {/* Styles CSS supplémentaires */}
+      <style>{`
+        @keyframes gradient {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .bg-300 { background-size: 300% 300%; }
+        .animate-gradient { animation: gradient 6s ease infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-gradient { animation: none; }
+        }
+      `}</style>
     </div>
   )
 }
