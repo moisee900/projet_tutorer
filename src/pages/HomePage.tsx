@@ -128,7 +128,7 @@ export const HomePage = () => {
                   <div className="w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
                   <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                   <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                  <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 ml-auto">Dashboard RH Pro</div>
+                  <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 ml-auto">Dashboard RH MANAGER</div>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -368,11 +368,11 @@ export const HomePage = () => {
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <span className="text-xl font-bold text-white">RH Pro</span>
+                <span className="text-xl font-bold text-white">RH Manager</span>
                 <p className="text-xs text-slate-400">Enterprise Suite</p>
               </div>
             </div>
-            <div className="text-sm text-slate-400">© 2026 RH Pro. Tous droits réservés. Projet L3.</div>
+            <div className="text-sm text-slate-400">© 2026 RH Manager. Tous droits réservés.</div>
           </div>
         </div>
       </footer>
