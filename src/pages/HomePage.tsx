@@ -436,7 +436,7 @@ export const HomePage = () => {
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Volume de recrutements (12 mois glissants)</div>
+                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">Volume de recrutements (12 mois ressents)</div>
                     <motion.div 
                       className="text-2xl font-bold text-primary-600"
                       animate={{ scale: [1, 1.1, 1] }}
@@ -781,7 +781,7 @@ export const HomePage = () => {
               </div>
               <div>
                 <span className="text-xl font-bold text-white">RH Manager</span>
-                <p className="text-xs text-slate-400">Enterprise Suite</p>
+                <p className="text-xs text-slate-400">La gestion sans stress</p>
               </div>
             </motion.div>
             <div className="text-sm text-slate-400">© 2026 RH Manager. Tous droits réservés.</div>

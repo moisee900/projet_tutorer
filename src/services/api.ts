@@ -8,48 +8,64 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 30000, // 30 secondes
+  timeout: 30000,
 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
-
   if (token) {
     config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   return config;
 });
 
 export default api;
 
 const buildUrl = (path: string) => {
-  // On s'assure que BASE se termine proprement et que path commence sans doublon de slash
   const base = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   return `${base}${cleanPath}`;
 };
 
+// ✅ CORRECTION : Normaliser les erreurs avec plus de détails
 const normalizeResponseError = async (response: Response) => {
-  const errorData = await response.json().catch(() => ({} as any));
-  const validationErrors = errorData?.errors && typeof errorData.errors === 'object'
-    ? Object.values(errorData.errors).flat().filter(Boolean)
-    : [];
-  const baseMessage = errorData?.message || `HTTP ${response.status}`;
-  const detailedMessage = validationErrors.length > 0
-    ? `${baseMessage}: ${validationErrors.join(' · ')}`
-    : baseMessage;
+  let errorData = {};
+  try {
+    errorData = await response.json();
+  } catch {
+    // Si le corps n'est pas du JSON, on garde un objet vide
+  }
 
-  const error = new Error(detailedMessage) as Error & {
+  const typedErrorData = errorData as any;
+  
+  // ✅ Extraire les erreurs de validation
+  const validationErrors = typedErrorData?.errors && typeof typedErrorData.errors === 'object'
+    ? Object.values(typedErrorData.errors).flat().filter(Boolean)
+    : [];
+
+  // ✅ Construire le message d'erreur
+  let baseMessage = typedErrorData?.message || `HTTP ${response.status}`;
+  
+  // ✅ Si c'est une erreur 422, prioriser les messages de validation
+  if (response.status === 422 && validationErrors.length > 0) {
+    baseMessage = validationErrors.join(' · ');
+  }
+
+  // ✅ Si le message contient "Erreur de validation", le garder tel quel
+  if (typedErrorData?.message && typedErrorData.message.includes('Erreur de validation')) {
+    baseMessage = typedErrorData.message;
+  }
+
+  const error = new Error(baseMessage) as Error & {
     status?: number;
     errors?: Record<string, string[]>;
     payload?: unknown;
   };
 
   error.status = response.status;
-  error.errors = errorData?.errors;
-  error.payload = errorData;
+  error.errors = typedErrorData?.errors;
+  error.payload = typedErrorData;
 
   return error;
 };
@@ -61,32 +77,26 @@ const requestJson = async (
 ): Promise<any> => {
   const token = localStorage.getItem('auth_token');
   
-  // 1. Détecter si on envoie un fichier / FormData
   const isFormData = options.body instanceof FormData;
 
-  // 2. Initialiser les en-têtes de base
   const headers: Record<string, string> = {
     Accept: 'application/json',
   };
 
-  // N'ajouter le Content-Type JSON que si ce N'EST PAS un FormData
   if (!isFormData) {
     headers['Content-Type'] = 'application/json';
   }
 
-  // Fusionner avec d'éventuels en-têtes spécifiques passés en option
   if (options.headers) {
     new Headers(options.headers).forEach((value, key) => {
       headers[key] = value;
     });
   }
 
-  // Ajouter le jeton Bearer d'authentification s'il existe
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  // 3. Préparer le corps de la requête de façon adaptative
   let requestBody = options.body;
   if (requestBody && !isFormData && typeof requestBody !== 'string') {
     requestBody = JSON.stringify(requestBody);
@@ -101,18 +111,16 @@ const requestJson = async (
     response = await fetch(buildUrl(path), {
       ...options,
       headers,
-      body: requestBody, // Utilise le body traité (FormData natif ou chaîne JSON)
+      body: requestBody,
       signal: controller.signal,
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error('L’envoi prend trop de temps. Vérifiez votre connexion puis réessayez.');
+      throw new Error('L\'envoi prend trop de temps. Vérifiez votre connexion puis réessayez.', { cause: error });
     }
-
     if (error instanceof TypeError) {
-      throw new Error('Le serveur est momentanément inaccessible. Vérifiez votre connexion puis réessayez.');
+      throw new Error('Le serveur est momentanément inaccessible. Vérifiez votre connexion puis réessayez.', { cause: error });
     }
-
     throw error;
   } finally {
     window.clearTimeout(timeoutId);
