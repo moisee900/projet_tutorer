@@ -99,7 +99,7 @@ export const LoginPage = () => {
                   <Building2 className="w-8 h-8 text-white transform group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">Connexion</h1>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Heureux de vous revoir sur RH Pro</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Heureux de vous revoir sur RH Manager</p>
               </div>
 
               {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
