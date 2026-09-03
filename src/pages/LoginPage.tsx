@@ -31,7 +31,7 @@ const fadeInUp = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -45,7 +45,7 @@ const fadeInLeft = {
     opacity: 1, 
     x: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -59,7 +59,7 @@ const fadeInRight = {
     opacity: 1, 
     x: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -74,7 +74,7 @@ const fadeInDown = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -90,7 +90,7 @@ const fadeInUpStagger = {
     transition: {
       delay: i * 0.06,
       duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
+      ease: [0.22, 1, 0.36, 1] as const
     }
   })
 }
@@ -101,7 +101,7 @@ const pulseGlow = {
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: "easeInOut"
+    ease: "easeInOut" as const
   }
 }
 
@@ -314,7 +314,7 @@ export const LoginPage = () => {
           className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-primary-200/30 dark:bg-primary-900/20 rounded-full blur-3xl"
           animate={{
             ...pulseGlow,
-            transition: { ...pulseGlow.transition, delay: 0.5 }
+              transition: { ...pulseGlow.transition, delay: 0.5 }
           }}
         />
       </div>

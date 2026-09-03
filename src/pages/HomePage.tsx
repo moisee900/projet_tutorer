@@ -29,7 +29,7 @@ const fadeInUp = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -44,7 +44,7 @@ const fadeInLeft = {
     x: 0, 
     rotate: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -59,7 +59,7 @@ const fadeInRight = {
     x: 0, 
     rotate: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -74,7 +74,7 @@ const fadeInDown = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -90,7 +90,7 @@ const fadeInUpStagger = {
     transition: {
       delay: i * 0.06,
       duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
+      ease: [0.22, 1, 0.36, 1] as const
     }
   })
 }
@@ -100,7 +100,7 @@ const floatAnimation = {
   transition: {
     duration: 4,
     repeat: Infinity,
-    ease: "easeInOut"
+    ease: "easeInOut" as const
   }
 }
 
@@ -110,7 +110,7 @@ const pulseGlow = {
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: "easeInOut"
+    ease: "easeInOut" as const
   }
 }
 
