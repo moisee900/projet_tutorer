@@ -30,7 +30,7 @@ const fadeInUp = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -45,7 +45,7 @@ const fadeInDown = {
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -59,7 +59,7 @@ const fadeInLeft = {
     opacity: 1, 
     x: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -73,7 +73,7 @@ const fadeInRight = {
     opacity: 1, 
     x: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -87,7 +87,7 @@ const pulseGlow = {
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: "easeInOut"
+    ease: "easeInOut" as const
   }
 }
 
