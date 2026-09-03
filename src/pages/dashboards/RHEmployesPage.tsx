@@ -21,8 +21,6 @@ type CredentialsModalState = {
   matricule: string
   nomComplet: string
   loginUrl: string
-  mailSendUrl: string
-  mailSent?: boolean
   message?: string
 }
 
@@ -74,9 +72,6 @@ export const RHEmployesPage = () => {
   const [newCredentials, setNewCredentials] = useState<CredentialsModalState | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [mailSending, setMailSending] = useState(false)
-  const [mailSuccessMsg, setMailSuccessMsg] = useState('')
-  const [mailErrorMsg, setMailErrorMsg] = useState('')
 
   const [formData, setFormData] = useState({
     nom: '',
@@ -195,7 +190,6 @@ export const RHEmployesPage = () => {
       : 'Non communiqué'
 
     const credentialsSource = source?.credentials || source?.data?.credentials || source?.employe || source?.membre || source
-    const mailSource = source?.mail || source?.data?.mail || {}
 
     return {
       status,
@@ -204,8 +198,6 @@ export const RHEmployesPage = () => {
       matricule: String(getResponseValue(credentialsSource, ['matricule']) || `EMP-${currentYear}-XXXXX`),
       nomComplet: `${String(getResponseValue(credentialsSource, ['prenom']) || formData.prenom || '').trim()} ${String(getResponseValue(credentialsSource, ['nom']) || formData.nom || '').trim()}`.trim(),
       loginUrl: String(getResponseValue(credentialsSource, ['login_url', 'loginUrl']) || ''),
-      mailSendUrl: String(getResponseValue(mailSource, ['send_url', 'sendUrl']) || ''),
-      mailSent: typeof getResponseValue(mailSource, ['sent']) === 'boolean' ? Boolean(getResponseValue(mailSource, ['sent'])) : undefined,
       message: String(source?.message || source?.data?.message || ''),
     }
   }
@@ -221,36 +213,19 @@ export const RHEmployesPage = () => {
       .catch(() => {})
   }, [])
 
-  const callSendUrl = async (sendUrl: string) => {
-    if (!sendUrl) {
-      throw new Error('Aucun lien d’envoi du mail n’a été fourni par l’API.')
-    }
-
-    const resolvedUrl = new URL(sendUrl, window.location.origin)
-    if (resolvedUrl.origin === window.location.origin) {
-      return await apiRequest(`${resolvedUrl.pathname}${resolvedUrl.search}`, { method: 'GET' })
-    }
-
-    const response = await fetch(resolvedUrl.toString(), {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    })
-
-    const payload = await response.json().catch(() => ({}))
-    if (!response.ok || payload?.success === false) {
-      throw new Error(payload?.message || `Erreur HTTP ${response.status}`)
-    }
-
-    return payload
-  }
-
   const handleAddEmploye = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setErrorMsg('')
     setSuccessMsg(null)
-    setMailSuccessMsg('')
-    setMailErrorMsg('')
+
+    // Validation minimale
+    if (!formData.company_id) {
+      setErrorMsg("L'ID de l'entreprise est manquant. Veuillez actualiser la page.")
+      setSubmitting(false)
+      return
+    }
+
     try {
       const response: any = await apiRequest('/rh/employes', {
         method: 'POST',
@@ -294,34 +269,10 @@ export const RHEmployesPage = () => {
     }
   }
 
-  const handleSendMail = async () => {
-    if (!newCredentials?.mailSendUrl) {
-      setMailErrorMsg('Le lien d’envoi du mail est introuvable.')
-      return
-    }
-
-    setMailSending(true)
-    setMailErrorMsg('')
-    setMailSuccessMsg('')
-
-    try {
-      const payload = await callSendUrl(newCredentials.mailSendUrl)
-      setMailSuccessMsg(payload?.message || 'Le mail a été envoyé avec succès.')
-      setNewCredentials(prev => prev ? { ...prev, mailSent: true } : prev)
-    } catch (err: any) {
-      setMailErrorMsg(err?.payload?.message || err?.response?.data?.message || err?.message || 'Erreur lors de l’envoi du mail.')
-    } finally {
-      setMailSending(false)
-    }
-  }
-
   const closeSuccessModal = () => {
     setShowSuccessModal(false)
     setNewCredentials(null)
     setSuccessMsg(null)
-    setMailSuccessMsg('')
-    setMailErrorMsg('')
-    setMailSending(false)
   }
 
   const copyToClipboard = async (text: string, fieldKey: string) => {
@@ -928,7 +879,7 @@ export const RHEmployesPage = () => {
         </motion.div>
       )}
 
-      {/* MODAL DE SUCCÈS AVEC IDENTIFIANTS - Dialogue après enregistrement */}
+      {/* MODAL DE SUCCÈS AVEC IDENTIFIANTS */}
       <AnimatePresence>
         {showSuccessModal && newCredentials && (
           <motion.div 
@@ -1085,7 +1036,7 @@ export const RHEmployesPage = () => {
                           {newCredentials.loginUrl}
                         </a>
                       ) : (
-                        <span className="text-sm text-slate-500 dark:text-slate-400">Aucun lien retourné</span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">Aucun lien retourné (utilisez l'URL de votre frontend)</span>
                       )}
                     </div>
                     {newCredentials.loginUrl && (
@@ -1104,50 +1055,16 @@ export const RHEmployesPage = () => {
                   </div>
                 </motion.div>
 
-                {/* Statut d'envoi du mail */}
-                {newCredentials.mailSent === false && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/25 border border-amber-200 dark:border-amber-800/40 text-xs text-amber-800 dark:text-amber-200 flex items-center gap-2"
-                  >
-                    <FontAwesomeIcon icon={faCircleExclamation} className="text-amber-500" />
-                    Le mail n’a pas encore été envoyé. Utilisez le bouton ci-dessous pour l'envoyer.
-                  </motion.div>
-                )}
-
-                {newCredentials.mailSent === true && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-200 dark:border-emerald-800/40 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2"
-                  >
-                    <FontAwesomeIcon icon={faCheckCircle} className="text-emerald-500" />
-                    Le mail a bien été envoyé à l'employé.
-                  </motion.div>
-                )}
-
-                {mailSuccessMsg && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-900/20 text-emerald-700 dark:text-emerald-200 rounded-xl text-sm border border-emerald-200 dark:border-emerald-800 flex items-center gap-2"
-                  >
-                    <FontAwesomeIcon icon={faCheckCircle} className="w-4 h-4" />
-                    {mailSuccessMsg}
-                  </motion.div>
-                )}
-
-                {mailErrorMsg && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-gradient-to-r from-rose-50 to-rose-100 dark:from-rose-900/30 dark:to-rose-900/20 text-rose-700 dark:text-rose-200 rounded-xl text-sm border border-rose-200 dark:border-rose-800 flex items-center gap-2"
-                  >
-                    <FontAwesomeIcon icon={faCircleExclamation} className="w-4 h-4" />
-                    {mailErrorMsg}
-                  </motion.div>
-                )}
+                {/* Message sur la file d'attente des emails */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/25 border border-blue-200 dark:border-blue-800/40 text-xs text-blue-800 dark:text-blue-200 flex items-center gap-2"
+                >
+                  <FontAwesomeIcon icon={faClock} className="text-blue-500" />
+                  L'email de connexion a été mis en file d'attente et sera envoyé automatiquement dans quelques minutes (selon le Cron configuré). Vous pouvez copier les accès ci-dessous en attendant.
+                </motion.div>
               </div>
 
               {/* Boutons d'action */}
@@ -1167,36 +1084,19 @@ export const RHEmployesPage = () => {
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   type="button"
-                  onClick={handleSendMail}
-                  disabled={mailSending || !newCredentials.mailSendUrl}
-                  className="flex-1 py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={closeSuccessModal}
+                  className="flex-1 py-3 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all"
                 >
-                  {mailSending ? (
-                    <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <FontAwesomeIcon icon={faEnvelope} className="w-4 h-4" />
-                  )}
-                  <span>{mailSending ? 'Envoi...' : 'Envoyer le mail'}</span>
+                  <FontAwesomeIcon icon={faCheckCircle} className="w-4 h-4" />
+                  <span>Terminer</span>
                 </motion.button>
               </div>
-
-              {/* Bouton fermer */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={closeSuccessModal}
-                className="w-full py-3 rounded-xl bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-semibold text-sm hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors flex items-center justify-center gap-2 border border-primary-200 dark:border-primary-800"
-              >
-                <FontAwesomeIcon icon={faTimes} className="w-4 h-4" />
-                <span>Fermer</span>
-              </motion.button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* MODAL PROFIL - (inchangée) */}
+      {/* MODAL PROFIL */}
       <AnimatePresence>
         {selectedMember && (
           <motion.div 
@@ -1358,7 +1258,7 @@ export const RHEmployesPage = () => {
         )}
       </AnimatePresence>
 
-      {/* MODAL AJOUT - (inchangée) */}
+      {/* MODAL AJOUT */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div 

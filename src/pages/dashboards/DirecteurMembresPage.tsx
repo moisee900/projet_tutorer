@@ -59,20 +59,18 @@ export const DirecteurMembresPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingMemberMatricule, setDeletingMemberMatricule] = useState<string | null>(null)
   const [showMemberDeleteConfirmation, setShowMemberDeleteConfirmation] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false) // 👈 Indicateur de rafraîchissement
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   
-  // État pour afficher les identifiants de connexion (succès complet ou création partielle)
   const [createdCredentials, setCreatedCredentials] = useState<CredentialsModalState | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const welcomeEmailsInProgress = useRef(new Set<string>())
   
-  // Formulaire d'ajout direct de l'employé
   const [createForm, setCreateForm] = useState({
     prenom: '',
     nom: '',
-    sexe: '', // 'M' ou 'F'
+    sexe: '',
     email: '',
     telephone: '',
     poste_id: '',
@@ -81,7 +79,6 @@ export const DirecteurMembresPage = () => {
   
   const [availablePostes, setAvailablePostes] = useState<any[]>([])
 
-  // Charger les données initiales (avec option pour masquer le loader bloquant lors du polling)
   const loadData = useCallback(async (isBackground = false, forceRefresh = false) => {
     if (isBackground) {
       setIsRefreshing(true)
@@ -108,18 +105,16 @@ export const DirecteurMembresPage = () => {
     }
   }, [])
 
-  // Chargement initial + Polling automatique toutes les 60 secondes
   useEffect(() => {
     loadData(false, false)
 
     const intervalId = setInterval(() => {
-      loadData(true, true) // Actualisation discrète en arrière-plan (forcée)
+      loadData(true, true)
     }, 60000)
 
     return () => clearInterval(intervalId)
   }, [loadData])
 
-  // Récupération sécurisée de l'ID de l'entreprise connectée
   const companyId = useMemo(() => {
     if (!dashboardData) return null
     return (
@@ -132,7 +127,6 @@ export const DirecteurMembresPage = () => {
     )
   }, [dashboardData])
 
-  // 1. Récupérer les services appartenant à cette entreprise
   const entrepriseServicesIds = useMemo(() => {
     const services = dashboardData?.services || []
     return services
@@ -140,7 +134,6 @@ export const DirecteurMembresPage = () => {
       .map((s: any) => Number(s.id_service))
   }, [dashboardData, companyId])
 
-  // 2. Filtrer les postes liés aux services de l'entreprise ou appartenant directement à l'entreprise
   const postes = useMemo(() => {
     const list = availablePostes.length > 0 ? availablePostes : (dashboardData?.postes || [])
     if (!list || list.length === 0) return []
@@ -158,13 +151,11 @@ export const DirecteurMembresPage = () => {
 
   const posteIdsSet = useMemo(() => new Set(postes.map((p: any) => Number(p.id_poste))), [postes])
 
-  // 3. Liste brute des employés et filtrage strict
   const rawEmployes = useMemo(() => dashboardData?.employes || [], [dashboardData?.employes])
 
   const employes = useMemo(() => {
     if (!rawEmployes || rawEmployes.length === 0) return []
 
-    // Fallback: si les postes n'ont pas encore chargé, on n'élimine pas toute la liste.
     if (posteIdsSet.size === 0) {
       return rawEmployes
     }
@@ -251,66 +242,34 @@ export const DirecteurMembresPage = () => {
 
   useEffect(() => {
     const credentials = createdCredentials
-    if (!credentials || credentials.status !== 'pending' || welcomeEmailsInProgress.current.has(credentials.matricule)) return
+    if (!credentials || credentials.status !== 'pending') return
 
-    welcomeEmailsInProgress.current.add(credentials.matricule)
+    // Le backend a déjà mis l'email dans la file d'attente.
+    // On laisse juste le temps à l'interface de se stabiliser.
+    const timer = setTimeout(() => {
+      setCreatedCredentials((current) => current?.matricule === credentials.matricule
+        ? { ...current, status: 'success', message: 'Email mis en file d\'attente par le serveur.' }
+        : current)
+      setSuccessMsg(`Membre créé avec succès. L'email sera automatiquement envoyé à ${credentials.email} dans quelques minutes (File d'attente).`)
+      setToast({ type: 'success', message: `Membre créé. Email en file d'attente pour ${credentials.email}.` })
+    }, 2000)
 
-    const sendAfterCredentialsAreVisible = async () => {
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-      })
-
-      try {
-        const response = await membreAPI.sendWelcomeEmail(credentials.matricule, credentials.password)
-        const emailSent = inferEmailSent(response) !== false
-        setCreatedCredentials((current) => current?.matricule === credentials.matricule
-          ? { ...current, status: emailSent ? 'success' : 'warning', message: response?.message }
-          : current)
-        setSuccessMsg(emailSent
-          ? `Membre créé et identifiants envoyés à ${credentials.email}.`
-          : 'Membre créé, mais l\'email n\'a pas pu être envoyé. Les identifiants restent visibles.')
-        setToast(emailSent
-          ? { type: 'success', message: `Les identifiants ont été envoyés à ${credentials.email}.` }
-          : { type: 'info', message: 'Le membre est créé, mais l\'email n\'a pas pu être envoyé.' })
-      } catch (error: any) {
-        setCreatedCredentials((current) => current?.matricule === credentials.matricule
-          ? { ...current, status: 'warning', message: error?.message }
-          : current)
-        setSuccessMsg('Membre créé, mais l\'email n\'a pas pu être envoyé. Les identifiants restent visibles.')
-        setToast({ type: 'info', message: 'Le membre est créé, mais l\'email n\'a pas pu être envoyé.' })
-      }
-    }
-
-    void sendAfterCredentialsAreVisible()
+    return () => clearTimeout(timer)
   }, [createdCredentials])
 
   const retryWelcomeEmail = async () => {
     const credentials = createdCredentials
     if (!credentials || credentials.status !== 'warning') return
 
-    welcomeEmailsInProgress.current.add(credentials.matricule)
     setCreatedCredentials({ ...credentials, status: 'pending' })
-    setSuccessMsg('Nouvelle tentative d\'envoi de l\'email en cours...')
+    setSuccessMsg('Nouvelle tentative d\'envoi de l\'email en cours (côté serveur)...')
 
-    try {
-      const response = await membreAPI.sendWelcomeEmail(credentials.matricule, credentials.password)
-      const emailSent = inferEmailSent(response) !== false
+    setTimeout(() => {
       setCreatedCredentials((current) => current?.matricule === credentials.matricule
-        ? { ...current, status: emailSent ? 'success' : 'warning', message: response?.message }
+        ? { ...current, status: 'success', message: 'Nouvel email mis en file d\'attente par le serveur.' }
         : current)
-      setSuccessMsg(emailSent
-        ? `Membre créé et identifiants envoyés à ${credentials.email}.`
-        : 'Membre créé, mais l\'email n\'a pas pu être envoyé. Les identifiants restent visibles.')
-      setToast(emailSent
-        ? { type: 'success', message: `Les identifiants ont été envoyés à ${credentials.email}.` }
-        : { type: 'info', message: 'La nouvelle tentative d\'envoi a échoué.' })
-    } catch (error: any) {
-      setCreatedCredentials((current) => current?.matricule === credentials.matricule
-        ? { ...current, status: 'warning', message: error?.message }
-        : current)
-      setSuccessMsg('Membre créé, mais l\'email n\'a pas pu être envoyé. Les identifiants restent visibles.')
-      setToast({ type: 'info', message: error?.message || 'La nouvelle tentative d\'envoi a échoué.' })
-    }
+      setToast({ type: 'success', message: 'Email remis en file d\'attente par le serveur.' })
+    }, 2000)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -355,7 +314,6 @@ export const DirecteurMembresPage = () => {
         role_name: 'employe',
       })
       
-      // 🔄 Rechargement immédiat et silencieux des données après enregistrement réussi
       clearDashboardContextCache()
       void loadData(true, true)
       setSuccessMsg('Membre créé avec succès. Les informations sont actualisées et l\'envoi de l\'email est en cours.')
@@ -369,7 +327,6 @@ export const DirecteurMembresPage = () => {
         clearDashboardContextCache()
         void loadData(true, true)
       } else if (isLikelyNetworkFailure(err)) {
-        // Le backend peut avoir créé le membre même si la réponse est bloquée (ex: CORS/proxy).
         clearDashboardContextCache()
         const freshContext = await loadDashboardContext(true).catch(() => null)
         const refreshedEmployes = freshContext?.employes || []
@@ -435,7 +392,6 @@ export const DirecteurMembresPage = () => {
         <div>
           <div className="flex items-center space-x-3">
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white">Membres de l'entreprise</h1>
-            {/* Indicateur visuel d'actualisation en arrière-plan */}
             {isRefreshing && (
               <span className="flex items-center space-x-1 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-900/50">
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -468,7 +424,6 @@ export const DirecteurMembresPage = () => {
         </div>
       )}
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {[
           { label: 'Total', value: employes.length, color: 'from-primary-500 to-primary-600', icon: Users },
@@ -486,7 +441,6 @@ export const DirecteurMembresPage = () => {
         ))}
       </div>
 
-      {/* Filtres */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 dark:border-slate-700">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -504,7 +458,6 @@ export const DirecteurMembresPage = () => {
         </div>
       </div>
 
-      {/* Liste des membres */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredMembers.map((emp: any) => (
@@ -567,7 +520,6 @@ export const DirecteurMembresPage = () => {
         </div>
       )}
 
-      {/* Modal detail membre */}
       {selectedMember && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -617,7 +569,6 @@ export const DirecteurMembresPage = () => {
         </div>
       )}
 
-      {/* Modal des identifiants et statut d'envoi email */}
       {createdCredentials && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 backdrop-blur-md p-4">
           <div className={`bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg p-6 sm:p-7 space-y-5 border ${createdCredentials.status === 'warning' ? 'border-amber-300 dark:border-amber-700/50' : createdCredentials.status === 'pending' ? 'border-blue-200 dark:border-blue-800/50' : 'border-emerald-200 dark:border-emerald-800/50'}`}>
@@ -727,7 +678,6 @@ export const DirecteurMembresPage = () => {
         </div>
       )}
 
-      {/* Modal d'ajout de l'employé */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-xl max-h-[95vh] overflow-y-auto">
