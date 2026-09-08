@@ -22,10 +22,19 @@ import { EmployePresencesPage } from './EmployePresencesPage'
 import { EmployeAvantagesPage } from './EmployeAvantagesPage'
 import { DirecteurMessageriePage } from './DirecteurMessageriePage'
 
+type EmployeeNotification = {
+  id: number
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  date: string
+  read: boolean
+}
+
 export const EmployeDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
-  const [notifications, setNotifications] = useState<any[]>([])
+  const [notifications, setNotifications] = useState<EmployeeNotification[]>([])
   const [recentConversations, setRecentConversations] = useState<any[]>([])
   const [dashboardData, setDashboardData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -472,7 +481,7 @@ export const EmployeDashboard = () => {
               >
                 <item.icon className="w-5 h-5" />
                 <span className="font-medium text-sm">{item.label}</span>
-                {item.badge > 0 && (
+                {item.badge !== undefined && item.badge > 0 && (
                   <span className="ml-auto inline-flex min-w-6 items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white shadow-sm shadow-red-500/25">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>

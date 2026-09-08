@@ -11,7 +11,7 @@ import {
   Clock as ClockIcon, RefreshCw, Sparkles, Crown, ArrowRight,
   Home, MoreHorizontal
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { 
   ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend
@@ -60,13 +60,13 @@ import { DirecteurMentoratPage } from './DirecteurMentoratPage'
 import { DirecteurTimesheetPage } from './DirecteurTimesheetPage'
 
 // Animations variants
-const fadeInUp = {
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
     opacity: 1, 
     y: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.6
@@ -91,7 +91,7 @@ const pulseGlow = {
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: "easeInOut"
+    ease: "easeInOut" as const
   }
 }
 

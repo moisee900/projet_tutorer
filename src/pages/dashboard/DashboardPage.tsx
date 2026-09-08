@@ -7,7 +7,7 @@ import {
   Sparkles, ArrowRight, Crown, Award, Clock,
   UserPlus, Settings, Bell, Search
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type TargetAndTransition, type Variants } from 'framer-motion'
 import { BrandMark } from '../../components/BrandMark'
 
 // Animations variants
@@ -22,14 +22,14 @@ const containerVariants = {
   }
 }
 
-const fadeInUp = {
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40, scale: 0.95 },
   visible: { 
     opacity: 1, 
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -37,14 +37,14 @@ const fadeInUp = {
   }
 }
 
-const fadeInDown = {
+const fadeInDown: Variants = {
   hidden: { opacity: 0, y: -40, scale: 0.95 },
   visible: { 
     opacity: 1, 
     y: 0, 
     scale: 1,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -52,13 +52,13 @@ const fadeInDown = {
   }
 }
 
-const fadeInLeft = {
+const fadeInLeft: Variants = {
   hidden: { opacity: 0, x: -60 },
   visible: { 
     opacity: 1, 
     x: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -66,13 +66,13 @@ const fadeInLeft = {
   }
 }
 
-const fadeInRight = {
+const fadeInRight: Variants = {
   hidden: { opacity: 0, x: 60 },
   visible: { 
     opacity: 1, 
     x: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 80,
       damping: 25,
       duration: 0.9
@@ -80,14 +80,27 @@ const fadeInRight = {
   }
 }
 
-const pulseGlow = {
+const pulseGlow: TargetAndTransition = {
   scale: [1, 1.02, 1],
   opacity: [0.6, 0.8, 0.6],
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: "easeInOut"
+    ease: "easeInOut" as const
   }
+}
+
+const fadeInUpStagger: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (index: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: index * 0.06,
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1] as const
+    }
+  })
 }
 
 const staggerChildren = {
