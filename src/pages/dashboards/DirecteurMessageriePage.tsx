@@ -1,19 +1,17 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { 
   ArrowLeft, Check, CheckCheck, MapPin, Phone, Search, Send, Video, X,
-  Users, UserPlus, User, Shield, Users as UsersGroup, MessageSquare,
-  MoreVertical, Plus, Settings, Trash2, Edit2, AtSign, Mail, Building2,
-  Circle, Clock, Star, Bell, BellOff, Pin, PinOff, Archive, 
-  Mic, MicOff, Camera, CameraOff, Volume2, VolumeX,
-  Smile, Paperclip, Link, File, Image, Download, Reply, Forward,
-  Copy, Flag, Ban, UserCheck, UserX, Crown, Hash, HashIcon
+  UserPlus, User, Shield, Users as UsersGroup, MessageSquare,
+  MoreVertical, Plus, Trash2, Bell, BellOff,
+  Mic, MicOff, Camera, CameraOff,
+  Smile, Paperclip, Reply, Copy,
+  LoaderCircle
 } from 'lucide-react'
 import { conversationAPI } from '../../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, formatDistanceToNow, isToday, isYesterday, isThisWeek } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-// ============ TYPES ============
 type Participant = {
   id: number
   name: string
@@ -82,7 +80,6 @@ type TypingIndicator = {
   userName: string
 }
 
-// ============ UTILS ============
 const initials = (firstName: string, lastName: string) => 
   `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
 
@@ -104,7 +101,6 @@ const getStatusColor = (status?: string) => {
   }
 }
 
-// ============ COMPOSANTS ============
 const MessageBubble = ({ 
   message, 
   isOwn, 
@@ -147,23 +143,15 @@ const MessageBubble = ({
             ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-tr-none' 
             : 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white rounded-tl-none border border-slate-200 dark:border-slate-600'
         }`}>
-          {message.reply_to && (
-            <div className="text-xs opacity-70 mb-1 p-2 bg-black/10 rounded-lg">
-              <Reply className="w-3 h-3 inline mr-1" />
-              Réponse à un message
-            </div>
-          )}
           <p className="text-sm whitespace-pre-wrap break-words">{message.body}</p>
           <div className={`flex justify-end items-center gap-1 mt-1 text-[10px] ${
             isOwn ? 'text-emerald-100' : 'text-slate-400 dark:text-slate-500'
           }`}>
             <span>{formatMessageDate(message.created_at)}</span>
             {isOwn && (message.read_at ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />)}
-            {message.is_edited && <span className="italic">(modifié)</span>}
           </div>
         </div>
         
-        {/* Actions au survol */}
         <AnimatePresence>
           {showActions && (
             <motion.div 
@@ -200,11 +188,8 @@ const MessageBubble = ({
   )
 }
 
-// ============ PAGE PRINCIPALE ============
 export const DirecteurMessageriePage = () => {
-  // États
   const [contacts, setContacts] = useState<Contact[]>([])
-  const [rhUsers, setRhUsers] = useState<RhUser[]>([])
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -213,23 +198,27 @@ export const DirecteurMessageriePage = () => {
   const [feedback, setFeedback] = useState('')
   const [sharingLocation, setSharingLocation] = useState(false)
   const [callMode, setCallMode] = useState<'audio' | 'video' | null>(null)
-  const [incomingCall, setIncomingCall] = useState<any | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showNewGroupModal, setShowNewGroupModal] = useState(false)
   const [groupName, setGroupName] = useState('')
   const [selectedParticipants, setSelectedParticipants] = useState<number[]>([])
-  const [typingUsers, setTypingUsers] = useState<TypingIndicator[]>([])
   const [isTyping, setIsTyping] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [isCameraOn, setIsCameraOn] = useState(true)
   const [isMicOn, setIsMicOn] = useState(true)
   const [replyTo, setReplyTo] = useState<number | null>(null)
   const [filterType, setFilterType] = useState<'all' | 'private' | 'group' | 'rh_service'>('all')
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  const [currentUserId, setCurrentUserId] = useState<number>(() => {
+    const userStr = localStorage.getItem('user')
+    try {
+      const user = userStr ? JSON.parse(userStr) : null
+      return user?.id || 0
+    } catch {
+      return 0
+    }
+  })
   
-  // Refs
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
@@ -239,7 +228,6 @@ export const DirecteurMessageriePage = () => {
   const inputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // ============ CHARGEMENT ============
   const loadConversations = useCallback(async () => {
     try {
       const response = await conversationAPI.getConversations()
@@ -258,15 +246,6 @@ export const DirecteurMessageriePage = () => {
     }
   }, [])
 
-  const loadRhUsers = useCallback(async () => {
-    try {
-      const response = await conversationAPI.getRhUsers()
-      setRhUsers(response.users || [])
-    } catch (error) {
-      console.error('Erreur chargement RH:', error)
-    }
-  }, [])
-
   const loadMessages = useCallback(async (conversationId: number) => {
     try {
       const response = await conversationAPI.getMessages(conversationId)
@@ -280,26 +259,18 @@ export const DirecteurMessageriePage = () => {
     }
   }, [loadConversations])
 
-  // Initialisation
   useEffect(() => {
-    void Promise.all([
-      loadContacts(),
-      loadRhUsers(),
-      loadConversations()
-    ])
-  }, [loadContacts, loadRhUsers, loadConversations])
+    void Promise.all([loadContacts(), loadConversations()])
+  }, [loadContacts, loadConversations])
 
-  // Sélection
   useEffect(() => {
     selectedConversationRef.current = selectedConversation
     if (selectedConversation) {
       void loadMessages(selectedConversation.id)
-      // Réinitialiser le reply
       setReplyTo(null)
     }
   }, [selectedConversation, loadMessages])
 
-  // Scroll auto
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
@@ -308,38 +279,32 @@ export const DirecteurMessageriePage = () => {
     }
   }, [messages])
 
-  // Polling
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       void loadConversations()
       if (selectedConversationRef.current) {
         void loadMessages(selectedConversationRef.current.id)
       }
-    }, 3000)
+    }, 5000)
 
     return () => window.clearInterval(intervalId)
   }, [loadConversations, loadMessages])
 
-  // Focus input
   useEffect(() => {
     if (selectedConversation) {
       setTimeout(() => inputRef.current?.focus(), 200)
     }
   }, [selectedConversation])
 
-  // ============ GESTION DES MESSAGES ============
   const handleTyping = (value: string) => {
     setNewMessage(value)
     setIsTyping(value.length > 0)
     
-    // Envoyer le signal de frappe au bout de 500ms
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current)
     }
     typingTimeoutRef.current = setTimeout(() => {
-      if (selectedConversation) {
-        // TODO: Envoyer signal de frappe
-        console.log('📝 Typing...')
+      if (selectedConversation && value.length > 0) {
       }
     }, 500)
   }
@@ -351,7 +316,6 @@ export const DirecteurMessageriePage = () => {
     setIsTyping(false)
     
     try {
-      const payload = replyTo ? { body: messageText, reply_to: replyTo } : { body: messageText }
       await conversationAPI.sendMessage(selectedConversation.id, messageText)
       setReplyTo(null)
       await loadMessages(selectedConversation.id)
@@ -368,19 +332,28 @@ export const DirecteurMessageriePage = () => {
       await conversationAPI.deleteMessage(messageId)
       await loadMessages(selectedConversation!.id)
       setFeedback('✅ Message supprimé')
+      setTimeout(() => setFeedback(''), 3000)
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'Impossible de supprimer le message.')
     }
   }
 
-  // ============ GESTION DES CONVERSATIONS ============
-  const openConversation = async (contact: Contact) => {
+  const openPrivateConversation = async (contact: Contact) => {
     try {
       setIsLoading(true)
       const response = await conversationAPI.createConversation(contact.id)
       await loadConversations()
-      const updated = conversations.find(c => c.id === response.conversation.id)
-      if (updated) setSelectedConversation(updated)
+      
+      const conv = conversations.find(c => c.id === response.conversation.id)
+      if (conv) {
+        setSelectedConversation(conv)
+      } else {
+        await loadConversations()
+        const found = conversations.find(c => c.id === response.conversation.id)
+        if (found) setSelectedConversation(found)
+      }
+      setFeedback('💬 Conversation privée ouverte !')
+      setTimeout(() => setFeedback(''), 3000)
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'Impossible d\'ouvrir la conversation.')
     } finally {
@@ -406,7 +379,7 @@ export const DirecteurMessageriePage = () => {
 
   const createGroupConversation = async () => {
     if (!groupName.trim() || selectedParticipants.length === 0) {
-      setFeedback('❌ Nom de la conversation et participants requis.')
+      setFeedback('❌ Nom du groupe et participants requis.')
       return
     }
 
@@ -417,52 +390,13 @@ export const DirecteurMessageriePage = () => {
       setGroupName('')
       setSelectedParticipants([])
       await loadConversations()
-      setFeedback('Conversation créé avec succès !')
+      setFeedback('✅ Groupe créé avec succès !')
       setTimeout(() => setFeedback(''), 3000)
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : 'Impossible de créer la conversation la conversation.')
+      setFeedback(error instanceof Error ? error.message : 'Impossible de créer le groupe.')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const toggleMute = async (conversationId: number) => {
-    // TODO: Appeler l'API pour mute/unmute
-    setIsMuted(!isMuted)
-    setFeedback(isMuted ? '🔔 Notifications activées' : '🔇 Notifications désactivées')
-    setTimeout(() => setFeedback(''), 2000)
-  }
-
-  const togglePin = async (conversationId: number) => {
-    // TODO: Appeler l'API pour pin/unpin
-    setFeedback('📌 Conversation épinglée')
-    setTimeout(() => setFeedback(''), 2000)
-  }
-
-  // ============ WEBRTC ============
-  const createPeerConnection = (conversationId: number) => {
-    const iceServers: RTCIceServer[] = [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]
-    const peerConnection = new RTCPeerConnection({ 
-      iceServers,
-      iceTransportPolicy: 'all'
-    })
-    
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        // TODO: Envoyer le signal
-        console.log('ICE candidate:', event.candidate)
-      }
-    }
-    
-    peerConnection.ontrack = (event) => {
-      setRemoteStream(event.streams[0])
-    }
-    
-    peerConnectionRef.current = peerConnection
-    return peerConnection
   }
 
   const startCall = async (mode: 'audio' | 'video') => {
@@ -477,12 +411,6 @@ export const DirecteurMessageriePage = () => {
         localVideoRef.current.srcObject = stream
       }
       setCallMode(mode)
-      
-      const peerConnection = createPeerConnection(selectedConversation.id)
-      stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream))
-      
-      const offer = await peerConnection.createOffer()
-      await peerConnection.setLocalDescription(offer)
       
       setFeedback(`📞 Appel ${mode === 'video' ? 'vidéo' : 'audio'} en cours...`)
     } catch (error) {
@@ -520,7 +448,6 @@ export const DirecteurMessageriePage = () => {
     }
   }
 
-  // ============ FILTRES ET TRI ============
   const filteredConversations = useMemo(() => {
     let filtered = conversations
     
@@ -528,7 +455,6 @@ export const DirecteurMessageriePage = () => {
       filtered = filtered.filter(c => c.type === filterType)
     }
     
-    // Filtrer par recherche
     if (searchTerm) {
       filtered = filtered.filter(c => 
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -538,10 +464,7 @@ export const DirecteurMessageriePage = () => {
       )
     }
     
-    // Trier: épinglés en premier, puis par date
     return filtered.sort((a, b) => {
-      if (a.is_pinned && !b.is_pinned) return -1
-      if (!a.is_pinned && b.is_pinned) return 1
       return new Date(b.last_message_at || b.created_at).getTime() - 
              new Date(a.last_message_at || a.created_at).getTime()
     })
@@ -553,10 +476,8 @@ export const DirecteurMessageriePage = () => {
     )
   }, [contacts, searchTerm])
 
-  // ============ RENDU ============
   return (
     <div className="space-y-6 h-full">
-      {/* HEADER */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-800 via-primary-600 to-slate-800 dark:from-white dark:via-primary-400 dark:to-white bg-clip-text text-transparent">
@@ -586,7 +507,7 @@ export const DirecteurMessageriePage = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 transition-all"
           >
             <UsersGroup className="w-4 h-4" />
-            Nouvelle conversation
+            Nouveau groupe
           </motion.button>
           
           <motion.button 
@@ -602,7 +523,6 @@ export const DirecteurMessageriePage = () => {
         </div>
       </div>
 
-      {/* FEEDBACK */}
       <AnimatePresence>
         {feedback && (
           <motion.div 
@@ -610,7 +530,7 @@ export const DirecteurMessageriePage = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             className={`p-3 rounded-xl text-sm flex items-center justify-between ${
-              feedback.includes('✅') || feedback.includes('📌') || feedback.includes('🔔') || feedback.includes('📞')
+              feedback.includes('✅') || feedback.includes('📞') || feedback.includes('💬')
                 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                 : feedback.includes('❌')
                 ? 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300 border border-red-200 dark:border-red-800'
@@ -625,25 +545,21 @@ export const DirecteurMessageriePage = () => {
         )}
       </AnimatePresence>
 
-      {/* MAIN */}
       <div className="bg-white/80 dark:bg-slate-800/80 rounded-2xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-xl overflow-hidden h-[calc(100vh-280px)] min-h-[520px]">
         <div className="flex h-full">
-          {/* SIDEBAR */}
           <aside className={`w-full md:w-80 border-r border-slate-200 dark:border-slate-700 flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
-            {/* Barre de recherche */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-700 space-y-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   value={searchTerm} 
                   onChange={(e) => setSearchTerm(e.target.value)} 
-                  placeholder="Rechercher une conversation..." 
+                  placeholder="Rechercher un contact..." 
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all text-sm" 
                 />
               </div>
               
-              {/* Filtres */}
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-wrap">
                 {(['all', 'private', 'group', 'rh_service'] as const).map((type) => (
                   <button
                     key={type}
@@ -662,88 +578,147 @@ export const DirecteurMessageriePage = () => {
               </div>
             </div>
 
-            {/* Liste des conversations */}
             <div className="flex-1 overflow-y-auto">
-              {filteredConversations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 text-center">
-                  <MessageSquare className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Aucune conversation</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Créez une conversation avec un collègue</p>
-                </div>
-              ) : (
-                filteredConversations.map((conv) => {
-                  const Icon = conv.type === 'rh_service' ? Shield : 
-                              conv.type === 'group' ? UsersGroup : User
-                  const color = conv.type === 'rh_service' ? 'from-amber-500 to-orange-500' :
-                               conv.type === 'group' ? 'from-violet-500 to-purple-500' :
-                               'from-emerald-500 to-teal-500'
-                  
-                  return (
-                    <motion.button
-                      key={conv.id}
-                      whileHover={{ backgroundColor: 'rgba(99, 102, 241, 0.04)' }}
-                      onClick={() => setSelectedConversation(conv)}
-                      className={`w-full text-left p-4 border-b border-slate-100 dark:border-slate-700/50 transition-colors ${
-                        selectedConversation?.id === conv.id 
-                          ? 'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-l-primary-500' 
-                          : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} text-white font-bold flex items-center justify-center shadow-md flex-shrink-0`}>
-                          {conv.type === 'rh_service' ? (
-                            <Shield className="w-5 h-5" />
-                          ) : conv.type === 'group' ? (
-                            <UsersGroup className="w-5 h-5" />
-                          ) : (
-                            <span className="text-sm">
-                              {initials(
-                                conv.participants.find(p => p.id !== parseInt(localStorage.getItem('user_id') || '0'))?.prenom || '',
-                                conv.participants.find(p => p.id !== parseInt(localStorage.getItem('user_id') || '0'))?.nom || ''
-                              )}
-                            </span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-slate-800 dark:text-white truncate">
-                              {conv.type === 'rh_service' ? 'Service RH' : conv.name}
-                            </span>
-                            {conv.unread_count > 0 && (
-                              <span className="w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center shadow-sm shadow-red-500/25">
-                                {conv.unread_count > 9 ? '9+' : conv.unread_count}
+              {filteredContacts.length > 0 && (
+                <div className="p-2">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-2">
+                    Contacts disponibles
+                  </p>
+                  {filteredContacts.map((contact) => {
+                    const existingConv = conversations.find(c => 
+                      c.type === 'private' && 
+                      c.participants.some(p => p.id === contact.id)
+                    )
+                    
+                    return (
+                      <motion.button
+                        key={contact.id}
+                        whileHover={{ backgroundColor: 'rgba(99, 102, 241, 0.04)' }}
+                        onClick={() => {
+                          if (existingConv) {
+                            setSelectedConversation(existingConv)
+                          } else {
+                            void openPrivateConversation(contact)
+                          }
+                        }}
+                        className="w-full text-left p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white font-bold flex items-center justify-center shadow-md flex-shrink-0">
+                            {initials(contact.prenom, contact.nom)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-slate-800 dark:text-white truncate">
+                                {contact.prenom} {contact.nom}
                               </span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-600 dark:text-slate-400 truncate">
-                              {conv.last_message || 'Démarrer une conversation'}
-                            </span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
-                              {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true, locale: fr }) : ''}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-xs text-slate-400 dark:text-slate-500">
-                              {conv.type === 'private' ? '🔒 Privé' : 
-                               conv.type === 'group' ? `${conv.participants.length} participants` : 
-                               '🛡️ Service RH'}
-                            </span>
+                              {existingConv && existingConv.unread_count > 0 && (
+                                <span className="w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">
+                                  {existingConv.unread_count > 9 ? '9+' : existingConv.unread_count}
+                                </span>
+                              )}
+                              {!existingConv && (
+                                <span className="text-[10px] text-primary-500 font-medium bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full">
+                                  Nouveau
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                {contact.poste || 'Collaborateur'}
+                              </span>
+                              {contact.is_online && (
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </motion.button>
-                  )
-                })
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {filteredConversations.length > 0 && (
+                <div className="p-2 border-t border-slate-200 dark:border-slate-700">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-2">
+                    Conversations
+                  </p>
+                  {filteredConversations.map((conv) => {
+                    if (conv.type === 'private') {
+                      const otherUser = conv.participants.find(p => p.id !== currentUserId)
+                      const isInContacts = contacts.some(c => c.id === otherUser?.id)
+                      if (isInContacts) return null
+                    }
+                    
+                    const Icon = conv.type === 'rh_service' ? Shield : 
+                                conv.type === 'group' ? UsersGroup : User
+                    const color = conv.type === 'rh_service' ? 'from-amber-500 to-orange-500' :
+                                 conv.type === 'group' ? 'from-violet-500 to-purple-500' :
+                                 'from-emerald-500 to-teal-500'
+                    
+                    const displayName = conv.type === 'private' 
+                      ? conv.participants.find(p => p.id !== currentUserId)?.prenom + ' ' + 
+                        conv.participants.find(p => p.id !== currentUserId)?.nom
+                      : conv.name
+                    
+                    return (
+                      <motion.button
+                        key={conv.id}
+                        whileHover={{ backgroundColor: 'rgba(99, 102, 241, 0.04)' }}
+                        onClick={() => setSelectedConversation(conv)}
+                        className={`w-full text-left p-3 rounded-xl transition-colors ${
+                          selectedConversation?.id === conv.id 
+                            ? 'bg-primary-50 dark:bg-primary-900/20' 
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${color} text-white font-bold flex items-center justify-center shadow-md flex-shrink-0`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-slate-800 dark:text-white truncate">
+                                {displayName}
+                              </span>
+                              {conv.unread_count > 0 && (
+                                <span className="w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">
+                                  {conv.unread_count > 9 ? '9+' : conv.unread_count}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                {conv.last_message || 'Démarrer une conversation'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                                {conv.last_message_at ? formatDistanceToNow(new Date(conv.last_message_at), { addSuffix: true, locale: fr }) : ''}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              )}
+
+              {filteredContacts.length === 0 && filteredConversations.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-64 text-center p-4">
+                  <MessageSquare className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Aucun contact disponible</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                    {searchTerm ? 'Aucun résultat pour votre recherche' : 'Les contacts de votre entreprise apparaîtront ici'}
+                  </p>
+                </div>
               )}
             </div>
           </aside>
 
-          {/* MAIN CHAT */}
           <main className={`flex-1 flex flex-col ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}>
             {selectedConversation ? (
               <>
-                {/* HEADER CHAT */}
                 <header className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
                   <div className="flex items-center gap-3 min-w-0">
                     <button 
@@ -769,26 +744,22 @@ export const DirecteurMessageriePage = () => {
                     
                     <div className="min-w-0">
                       <p className="font-semibold text-slate-800 dark:text-white truncate">
-                        {selectedConversation.type === 'rh_service' ? 'Service RH' : selectedConversation.name}
+                        {selectedConversation.type === 'private' 
+                          ? selectedConversation.participants.find(p => p.id !== currentUserId)?.prenom + ' ' + 
+                            selectedConversation.participants.find(p => p.id !== currentUserId)?.nom
+                          : selectedConversation.name}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {selectedConversation.type === 'private' ? '🔒 Conversation privée' : 
+                        {selectedConversation.type === 'private' ? 'Conversation privée' : 
                          selectedConversation.type === 'group' ? `${selectedConversation.participants.length} participants` : 
-                         '🛡️ Tous les RH peuvent voir'}
+                         'Service RH'}
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-1">
                     <button 
-                      onClick={() => togglePin(selectedConversation.id)}
-                      className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      title="Épingler"
-                    >
-                      <Pin className="w-4 h-4 text-slate-500" />
-                    </button>
-                    <button 
-                      onClick={() => toggleMute(selectedConversation.id)}
+                      onClick={() => setIsMuted(!isMuted)}
                       className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       title="Notifications"
                     >
@@ -825,7 +796,6 @@ export const DirecteurMessageriePage = () => {
                   </div>
                 </header>
 
-                {/* APPEL EN COURS */}
                 <AnimatePresence>
                   {callMode && (
                     <motion.div 
@@ -883,7 +853,6 @@ export const DirecteurMessageriePage = () => {
                   )}
                 </AnimatePresence>
 
-                {/* MESSAGES */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-900/50 dark:to-slate-800">
                   {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center">
@@ -893,7 +862,7 @@ export const DirecteurMessageriePage = () => {
                     </div>
                   ) : (
                     messages.map((message) => {
-                      const isOwn = message.user_id === parseInt(localStorage.getItem('user_id') || '0')
+                      const isOwn = message.user_id === currentUserId
                       return (
                         <MessageBubble 
                           key={message.id}
@@ -908,7 +877,6 @@ export const DirecteurMessageriePage = () => {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* INPUT */}
                 <footer className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
                   {replyTo && (
                     <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-700 p-2 rounded-lg mb-2">
@@ -928,7 +896,6 @@ export const DirecteurMessageriePage = () => {
                   )}
                   <div className="flex gap-2 items-center">
                     <button 
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                       className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
                     >
                       <Smile className="w-5 h-5 text-slate-500" />
@@ -985,11 +952,11 @@ export const DirecteurMessageriePage = () => {
                   </motion.div>
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">Messagerie sécurisée</h3>
                   <p className="text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
-                    Sélectionnez une conversation ou contactez un collègue pour commencer à échanger en toute sécurité.
+                    Sélectionnez un contact ou une conversation pour commencer à échanger en toute sécurité.
                   </p>
                   <div className="mt-6 flex flex-wrap justify-center gap-3">
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-sm">
-                      <Lock className="w-4 h-4" /> Chiffré
+                      <LockIcon className="w-4 h-4" /> Chiffré
                     </span>
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
                       <Shield className="w-4 h-4" /> Sécurisé
@@ -1005,7 +972,6 @@ export const DirecteurMessageriePage = () => {
         </div>
       </div>
 
-      {/* MODAL NOUVEAU GROUPE */}
       <AnimatePresence>
         {showNewGroupModal && (
           <motion.div 
@@ -1026,7 +992,7 @@ export const DirecteurMessageriePage = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <UsersGroup className="w-5 h-5 text-violet-500" />
-                  Nouvelle conversation
+                  Nouveau groupe
                 </h2>
                 <button onClick={() => setShowNewGroupModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">
                   <X className="w-5 h-5 text-slate-500" />
@@ -1036,7 +1002,7 @@ export const DirecteurMessageriePage = () => {
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
-                    Nom de la conversation *
+                    Nom du groupe *
                   </label>
                   <input 
                     type="text" 
@@ -1053,10 +1019,7 @@ export const DirecteurMessageriePage = () => {
                     Participants * ({selectedParticipants.length} sélectionnés)
                   </label>
                   <div className="max-h-48 overflow-y-auto space-y-2 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-2">
-                    {contacts.filter(c => {
-                      const userId = parseInt(localStorage.getItem('user_id') || '0')
-                      return c.id !== userId
-                    }).map((contact) => (
+                    {contacts.filter(c => c.id !== currentUserId).map((contact) => (
                       <label 
                         key={contact.id} 
                         className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all ${
@@ -1107,13 +1070,13 @@ export const DirecteurMessageriePage = () => {
                   >
                     {isLoading ? (
                       <>
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <LoaderCircle className="w-4 h-4 animate-spin" />
                         Création...
                       </>
                     ) : (
                       <>
                         <Plus className="w-4 h-4" />
-                        Créer la conversation
+                        Créer le groupe
                       </>
                     )}
                   </motion.button>
@@ -1124,7 +1087,6 @@ export const DirecteurMessageriePage = () => {
         )}
       </AnimatePresence>
 
-      {/* STYLES */}
       <style>{`
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -1132,12 +1094,6 @@ export const DirecteurMessageriePage = () => {
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        @keyframes gradient {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        .bg-300 { background-size: 300% 300%; }
-        .animate-gradient { animation: gradient 6s ease infinite; }
         .animate-bounce {
           animation: bounce 1.4s infinite ease-in-out both;
         }
@@ -1150,8 +1106,7 @@ export const DirecteurMessageriePage = () => {
   )
 }
 
-// Composant Lock manquant
-const Lock = (props: any) => (
+const LockIcon = (props: any) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
