@@ -156,11 +156,28 @@ export const DirecteurMembresPage = () => {
   const employes = useMemo(() => {
     if (!rawEmployes || rawEmployes.length === 0) return []
 
+    const sortedEmployes = [...rawEmployes].sort((a: any, b: any) => {
+      const dateA = a.created_at || a.date_embauche || a.date_creation || a.date_ajout || a.createdAt || a.dateCreation
+      const dateB = b.created_at || b.date_embauche || b.date_creation || b.date_ajout || b.createdAt || b.dateCreation
+
+      const timeA = dateA ? new Date(dateA).getTime() : 0
+      const timeB = dateB ? new Date(dateB).getTime() : 0
+
+      if (Number.isNaN(timeA) && Number.isNaN(timeB)) {
+        return Number(b.id || 0) - Number(a.id || 0)
+      }
+
+      if (Number.isNaN(timeA)) return 1
+      if (Number.isNaN(timeB)) return -1
+
+      return timeB - timeA
+    })
+
     if (posteIdsSet.size === 0) {
-      return rawEmployes
+      return sortedEmployes
     }
 
-    return rawEmployes.filter((emp: any) => {
+    return sortedEmployes.filter((emp: any) => {
       if (!emp.id_poste) return false
       return posteIdsSet.has(Number(emp.id_poste))
     })
@@ -171,10 +188,10 @@ export const DirecteurMembresPage = () => {
       const prenom = emp.prenom || ''
       const nom = emp.nom || ''
       const email = emp.email || ''
-      
-      const matchesSearch = prenom.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            email.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesSearch = prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesService = filterService === 'all' || String(emp.id_poste) === filterService
       return matchesSearch && matchesService
     })
