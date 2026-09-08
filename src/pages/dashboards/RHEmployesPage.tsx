@@ -57,6 +57,12 @@ const slideInFromLeft = {
   exit: { opacity: 0, x: 50 }
 }
 
+const getEmployeeDate = (emp: any) => {
+  const dateValue = emp.created_at || emp.date_creation || emp.createdAt || emp.date_embauche
+  const timestamp = dateValue ? new Date(dateValue).getTime() : 0
+  return Number.isNaN(timestamp) ? 0 : timestamp
+}
+
 export const RHEmployesPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatut, setFilterStatut] = useState('all')
@@ -138,8 +144,8 @@ export const RHEmployesPage = () => {
       let valB = b[sortField] || ''
       
       if (sortField === 'date_embauche') {
-        valA = new Date(valA).getTime() || 0
-        valB = new Date(valB).getTime() || 0
+        valA = getEmployeeDate(a)
+        valB = getEmployeeDate(b)
       }
       
       if (typeof valA === 'string') {
@@ -621,7 +627,7 @@ export const RHEmployesPage = () => {
                     }}
                   />
                   
-                  {new Date(emp.date_embauche).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 && (
+                  {getEmployeeDate(emp) > Date.now() - 30 * 60 * 1000 && getEmployeeDate(emp) <= Date.now() && (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
