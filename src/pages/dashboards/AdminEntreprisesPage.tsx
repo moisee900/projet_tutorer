@@ -79,6 +79,9 @@ export const AdminEntreprisesPage = () => {
     { mois: 'Mai', nouvelles: 2, total: 15 },
     { mois: 'Jun', nouvelles: 3, total: 18 },
   ]
+  const croissanceCeMois = filteredEntreprises.length > 0 && evolutionData.length > 1
+    ? Math.round(((evolutionData[evolutionData.length - 1].total - evolutionData[evolutionData.length - 2].total) / evolutionData[evolutionData.length - 2].total) * 100)
+    : 0
 
   const handleDelete = (id: number) => {
     if (window.confirm('Etes-vous sur de vouloir supprimer cette entreprise ?')) {
@@ -265,7 +268,7 @@ export const AdminEntreprisesPage = () => {
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
             <TrendingUp className="w-8 h-8 text-amber-600" />
-            <span className="text-3xl font-bold text-slate-800 dark:text-white">+15%</span>
+            <span className="text-3xl font-bold text-slate-800 dark:text-white">{croissanceCeMois > 0 ? '+' : ''}{croissanceCeMois}%</span>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400">Croissance ce mois</p>
         </div>

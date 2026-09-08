@@ -10,7 +10,7 @@ export const DirecteurBienEtrePage = () => {
   const stats = {
     totalDefis: defis.length,
     totalParticipants: defis.reduce((sum, d) => sum + d.participants, 0),
-    moyenneProgression: (defis.reduce((sum, d) => sum + d.progression_moyenne, 0) / defis.length).toFixed(0),
+    moyenneProgression: (defis.length > 0 ? defis.reduce((sum, d) => sum + d.progression_moyenne, 0) / defis.length : 0).toFixed(0),
     totalRessources: ressources.length
   }
 

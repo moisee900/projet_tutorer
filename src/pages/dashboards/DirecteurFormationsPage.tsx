@@ -33,7 +33,7 @@ export const DirecteurFormationsPage = () => {
     terminees: formations.filter(f => f.statut === 'Terminee').length,
     totalParticipants: formations.reduce((sum, f) => sum + f.participants.length, 0),
     budgetTotal: formations.reduce((sum, f) => sum + (f.cout * f.places_total), 0),
-    tauxCertification: (inscriptions.filter(i => i.certification_obtenue).length / inscriptions.length * 100) || 0
+    tauxCertification: inscriptions.length > 0 ? inscriptions.filter(i => i.certification_obtenue).length / inscriptions.length * 100 : 0
   }
 
   const categorieData = [
@@ -294,19 +294,21 @@ export const DirecteurFormationsPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-6 bg-gradient-to-br from-primary-50 to-primary-50 dark:from-primary-900/20 dark:to-primary-900/20 rounded-2xl border border-amber-200 dark:border-amber-800">
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Taux de completion</p>
-                  <p className="text-3xl font-bold text-amber-600">85%</p>
+                  <p className="text-3xl font-bold text-amber-600">{stats.total > 0 ? ((stats.terminees / stats.total) * 100).toFixed(0) : 0}%</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">des formations terminees</p>
                 </div>
                 <div className="p-6 bg-gradient-to-br from-primary-50 to-primary-50 dark:from-primary-900/20 dark:to-primary-900/20 rounded-2xl border border-green-200 dark:border-green-800">
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">Satisfaction moyenne</p>
                   <p className="text-3xl font-bold text-green-600 flex items-center">
-                    4.6 <Star className="w-6 h-6 text-green-600 fill-green-600 ml-2" />
+                    {inscriptions.filter(i => i.note_finale > 0).length > 0
+                      ? (inscriptions.filter(i => i.note_finale > 0).reduce((sum, i) => sum + i.note_finale, 0) / inscriptions.filter(i => i.note_finale > 0).length).toFixed(1)
+                      : '0.0'} <Star className="w-6 h-6 text-green-600 fill-green-600 ml-2" />
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">sur 5.0</p>
                 </div>
                 <div className="p-6 bg-gradient-to-br from-primary-50 to-primary-50 dark:from-primary-900/20 dark:to-primary-900/20 rounded-2xl border border-primary-200 dark:border-primary-800">
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">ROI Formation</p>
-                  <p className="text-3xl font-bold text-primary-600">+23%</p>
+                  <p className="text-3xl font-bold text-primary-600">0%</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">productivite</p>
                 </div>
               </div>

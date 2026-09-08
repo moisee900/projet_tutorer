@@ -476,7 +476,7 @@ export const RHEmployesPage = () => {
                 >
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: `${(stat.value / employes.length) * 100}%` }}
+                    animate={{ width: `${employes.length > 0 ? Math.min((stat.value / employes.length) * 100, 100) : 0}%` }}
                     transition={{ delay: 0.3 + i * 0.08, duration: 1, ease: "easeOut" }}
                     className={`h-full bg-gradient-to-r ${stat.color} rounded-full`}
                   />

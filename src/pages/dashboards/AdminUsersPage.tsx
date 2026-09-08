@@ -26,6 +26,9 @@ export const AdminUsersPage = () => {
   }, [])
 
   const users = dashboardData?.users || []
+  const tauxConnexion = users.length > 0
+    ? Math.round((users.filter((user: any) => user.statut === 'actif').length / users.length) * 100)
+    : 0
 
   const filteredUsers = useMemo(() => users.filter((user: any) => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -119,7 +122,7 @@ export const AdminUsersPage = () => {
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
             <Activity className="w-8 h-8 text-primary-600" />
-            <span className="text-3xl font-bold text-slate-800 dark:text-white">87%</span>
+            <span className="text-3xl font-bold text-slate-800 dark:text-white">{tauxConnexion}%</span>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400">Taux de connexion</p>
         </div>

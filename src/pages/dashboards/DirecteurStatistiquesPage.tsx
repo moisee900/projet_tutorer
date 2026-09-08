@@ -146,7 +146,7 @@ export const DirecteurStatistiquesPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {services.map((service: any) => {
             const count = employes.filter((e: any) => postes.some((p: any) => p.id_service === service.id_service && p.id_poste === e.id_poste)).length
-            const percentage = (count / (employes.length || 1) * 100).toFixed(1)
+            const percentage = (employes.length > 0 ? count / employes.length * 100 : 0).toFixed(1)
             return (
               <div key={service.id_service} className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
                 <div className="flex items-center justify-between mb-2">

@@ -289,7 +289,7 @@ export const OffresEmploiPage = () => {
           totalActives: total,
           entreprisesPartenaires: uniqueEntreprises || rawEntreprises.length,
           salaireMoyen: moyenne,
-          postulationsRapides: 99
+          postulationsRapides: total > 0 ? 99 : 0
         })
 
       } catch (error) {

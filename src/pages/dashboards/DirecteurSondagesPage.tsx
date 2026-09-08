@@ -206,7 +206,7 @@ export const DirecteurSondagesPage = () => {
                             <span className="text-sm text-slate-600 dark:text-slate-400">{opt}</span>
                             <div className="flex items-center space-x-2">
                               <div className="w-32 bg-slate-200 dark:bg-slate-600 rounded-full h-2">
-                                <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${((q.reponses?.[i] || 0) / selectedSondage.total_reponses) * 100}%` }}></div>
+                                <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${selectedSondage.total_reponses > 0 ? Math.min(((q.reponses?.[i] || 0) / selectedSondage.total_reponses) * 100, 100) : 0}%` }}></div>
                               </div>
                               <span className="text-sm font-semibold text-slate-800 dark:text-white">{q.reponses?.[i] || 0}</span>
                             </div>

@@ -128,7 +128,7 @@ export const DirecteurApprobationsPage = () => {
                         <span className="font-semibold text-slate-800 dark:text-white">{demande.etape_actuelle}/{demande.total_etapes}</span>
                       </div>
                       <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                        <div className="bg-amber-500 h-2 rounded-full transition-all" style={{ width: `${(demande.etape_actuelle / demande.total_etapes) * 100}%` }}></div>
+                        <div className="bg-amber-500 h-2 rounded-full transition-all" style={{ width: `${demande.total_etapes > 0 ? Math.min((demande.etape_actuelle / demande.total_etapes) * 100, 100) : 0}%` }}></div>
                       </div>
                     </div>
                   </div>
