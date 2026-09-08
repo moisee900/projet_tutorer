@@ -47,7 +47,7 @@ export const PublicNavbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
           <Link to="/" className="group">
-            <BrandMark />
+            <BrandMark label="RH PRO" />
           </Link>
 
           <div className="hidden lg:flex items-center space-x-6">

@@ -291,7 +291,7 @@ export const DirecteurDashboard = () => {
 
   const kpiCards = useMemo(() => [
     { icon: Users, label: 'Total Membres', value: stats.totalMembres, change: '+12% ce mois', color: 'from-primary-500 to-primary-700' },
-    { icon: DollarSign, label: 'Masse Salariale', value: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(stats.masseSalariale), change: '+8%', color: 'from-primary-600 to-primary-800' },
+    { icon: DollarSign, label: 'Masse Salariale', value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(stats.masseSalariale), change: '+8%', color: 'from-primary-600 to-primary-800' },
     { icon: Briefcase, label: 'Postes Occupés', value: `${stats.postesOccupes}/${stats.postesTotal}`, change: `${stats.postesVacants} vacants`, color: 'from-primary-500 to-primary-700' },
     { icon: Target, label: 'Recrutements', value: stats.recrutementMois, change: 'Ce mois', color: 'from-primary-600 to-primary-700' },
   ], [stats])

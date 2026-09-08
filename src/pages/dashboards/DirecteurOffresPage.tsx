@@ -8,7 +8,7 @@ import { offreAPI } from '../../services/api'
 import { DeleteConfirmationModal } from '../../components/ui/DeleteConfirmationModal'
 import { Toast } from '../../components/ui/Toast'
 
-const money = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 
 type OfferDisplay = {
   id: number

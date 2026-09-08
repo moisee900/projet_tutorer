@@ -10,7 +10,7 @@ import { motion, useAnimation, useInView, AnimatePresence } from 'framer-motion'
 import { offreAPI } from '../services/api'
 import { BrandMark } from '../components/BrandMark'
 
-const money = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
 
 // Animations variants
 const containerVariants = {
