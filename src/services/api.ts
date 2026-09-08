@@ -781,82 +781,73 @@ export const invitationAPI = {
 // CONVERSATIONS SÉCURISÉES
 // ═══════════════════════════════════════════════════════════════
 export const conversationAPI = {
-  // Récupère toutes les conversations
-  getConversations: async () => {
-    return await apiRequest('/conversations')
-  },
+    getConversations: async () => {
+        return await apiRequest('/conversations')
+    },
 
-  // Récupère les contacts
-  getContacts: async () => {
-    return await apiRequest('/conversations/contacts')
-  },
+    getContacts: async () => {
+        return await apiRequest('/conversations/contacts')
+    },
 
-  // Récupère les utilisateurs RH
-  getRhUsers: async () => {
-    return await apiRequest('/conversations/rh/users')
-  },
+    getRhUsers: async () => {
+        return await apiRequest('/conversations/rh/users')
+    },
 
-  // Crée une conversation privée
-  createConversation: async (userId: number) => {
-    return await apiRequest('/conversations', {
-      method: 'POST',
-      body: JSON.stringify({
-        type: 'private',
-        participant_ids: [userId],
-      }),
-    })
-  },
+    createConversation: async (userId: number) => {
+        return await apiRequest('/conversations', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'private',
+                participant_ids: [userId],
+            }),
+        })
+    },
 
-  // Crée une conversation de groupe
-  createGroupConversation: async (participantIds: number[], name: string) => {
-    return await apiRequest('/conversations', {
-      method: 'POST',
-      body: JSON.stringify({
-        type: 'group',
-        participant_ids: participantIds,
-        name: name,
-      }),
-    })
-  },
+    createGroupConversation: async (participantIds: number[], name: string) => {
+        return await apiRequest('/conversations', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'group',
+                participant_ids: participantIds,
+                name: name,
+            }),
+        })
+    },
 
-  // Crée une conversation avec le service RH
-  createRhServiceConversation: async () => {
-    return await apiRequest('/conversations', {
-      method: 'POST',
-      body: JSON.stringify({
-        type: 'rh_service',
-        participant_ids: [],
-      }),
-    })
-  },
+    // ✅ CORRECTION : Créer une conversation RH
+    createRhServiceConversation: async () => {
+        return await apiRequest('/conversations', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'rh_service',
+                // ✅ Pas besoin de participant_ids pour le service RH
+            }),
+        })
+    },
 
-  // Récupère les messages d'une conversation
-  getMessages: async (conversationId: number, limit = 50, offset = 0) => {
-    return await apiRequest(`/conversations/${conversationId}/messages?limit=${limit}&offset=${offset}`)
-  },
+    getMessages: async (conversationId: number, limit = 50, offset = 0) => {
+        return await apiRequest(`/conversations/${conversationId}/messages?limit=${limit}&offset=${offset}`)
+    },
 
-  // Envoie un message
-  sendMessage: async (conversationId: number, body: string) => {
-    return await apiRequest(`/conversations/${conversationId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ body }),
-    })
-  },
+    sendMessage: async (conversationId: number, body: string) => {
+        return await apiRequest(`/conversations/${conversationId}/messages`, {
+            method: 'POST',
+            body: JSON.stringify({ body }),
+        })
+    },
 
-  // Ajoute un participant à un groupe
-  addParticipant: async (conversationId: number, userId: number) => {
-    return await apiRequest(`/conversations/${conversationId}/participants`, {
-      method: 'POST',
-      body: JSON.stringify({ user_id: userId }),
-    })
-  },
+    addParticipant: async (conversationId: number, userId: number) => {
+        return await apiRequest(`/conversations/${conversationId}/participants`, {
+            method: 'POST',
+            body: JSON.stringify({ user_id: userId }),
+        })
+    },
 
-  // Supprime un message
-  deleteMessage: async (messageId: number) => {
-    return await apiRequest(`/conversations/messages/${messageId}`, {
-      method: 'DELETE',
-    })
-  },
+    deleteMessage: async (messageId: number) => {
+        return await apiRequest(`/conversations/messages/${messageId}`, {
+            method: 'DELETE',
+        })
+    },
 }
 
 // ═══════════════════════════════════════════════════════════════

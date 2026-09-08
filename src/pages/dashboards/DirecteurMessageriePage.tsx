@@ -406,7 +406,7 @@ export const DirecteurMessageriePage = () => {
 
   const createGroupConversation = async () => {
     if (!groupName.trim() || selectedParticipants.length === 0) {
-      setFeedback('❌ Nom du groupe et participants requis.')
+      setFeedback('❌ Nom de la conversation et participants requis.')
       return
     }
 
@@ -417,10 +417,10 @@ export const DirecteurMessageriePage = () => {
       setGroupName('')
       setSelectedParticipants([])
       await loadConversations()
-      setFeedback('✅ Groupe créé avec succès !')
+      setFeedback('Conversation créé avec succès !')
       setTimeout(() => setFeedback(''), 3000)
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : 'Impossible de créer le groupe.')
+      setFeedback(error instanceof Error ? error.message : 'Impossible de créer la conversation la conversation.')
     } finally {
       setIsLoading(false)
     }
@@ -586,7 +586,7 @@ export const DirecteurMessageriePage = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 transition-all"
           >
             <UsersGroup className="w-4 h-4" />
-            Nouveau groupe
+            Nouvelle conversation
           </motion.button>
           
           <motion.button 
@@ -1026,7 +1026,7 @@ export const DirecteurMessageriePage = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <UsersGroup className="w-5 h-5 text-violet-500" />
-                  Nouveau groupe
+                  Nouvelle conversation
                 </h2>
                 <button onClick={() => setShowNewGroupModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors">
                   <X className="w-5 h-5 text-slate-500" />
@@ -1036,7 +1036,7 @@ export const DirecteurMessageriePage = () => {
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
-                    Nom du groupe *
+                    Nom de la conversation *
                   </label>
                   <input 
                     type="text" 
@@ -1113,7 +1113,7 @@ export const DirecteurMessageriePage = () => {
                     ) : (
                       <>
                         <Plus className="w-4 h-4" />
-                        Créer le groupe
+                        Créer la conversation
                       </>
                     )}
                   </motion.button>
