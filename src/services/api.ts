@@ -1085,6 +1085,13 @@ export const fichesPaieAPI = {
     });
   },
 
+  reject: async (id: number, commentaire?: string) => {
+    return await apiRequest(`/rh/fiches_paies/refuser/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ commentaire_rh: commentaire ?? '' }),
+    });
+  },
+
   retryTransfer: async (id: number) => {
     return await apiRequest(`/rh/fiches_paies/${id}/relancer-virement`, {
       method: 'POST',

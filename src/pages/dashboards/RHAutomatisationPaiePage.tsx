@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, Calendar, CheckCircle2, Clock, DollarSign, Eye, FileText, Play, RefreshCw, RotateCcw, ShieldCheck, Users, X } from 'lucide-react'
-import { avancesPaieAPI, type DemandeAvancePaie, fichesPaieAPI, type FichePaie } from '../../services/api'
+import { AlertCircle, Calendar, CheckCircle2, Clock, DollarSign, Eye, FileText, Play, RefreshCw, RotateCcw, ShieldCheck, Users, X, Ban } from 'lucide-react'
+import { avancesPaieAPI, extractFichesPaie, type DemandeAvancePaie, fichesPaieAPI, type FichePaie } from '../../services/api'
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
@@ -17,7 +17,7 @@ export const RHAutomatisationPaiePage = ({ title = 'Paie mensuelle', subtitle = 
     setBusy(true)
     try {
       const [paieResponse, avanceResponse] = await Promise.all([fichesPaieAPI.getAll(), avancesPaieAPI.getAll()])
-      setFiches(paieResponse.fiches_paies ?? [])
+      setFiches(extractFichesPaie(paieResponse))
       setAvances(avanceResponse.demandes ?? [])
     } catch (error) {
       setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Impossible de charger les données de paie.' })
@@ -56,6 +56,20 @@ export const RHAutomatisationPaiePage = ({ title = 'Paie mensuelle', subtitle = 
     }
   }
 
+  const reject = async (id: number) => {
+    const commentaire = window.prompt('Motif du refus (facultatif)') ?? ''
+    setBusy(true)
+    try {
+      const response = await fichesPaieAPI.reject(id, commentaire)
+      setFeedback({ type: 'success', text: response.message })
+      await load()
+    } catch (error) {
+      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Le refus a échoué.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const processAdvance = async (id: number, statut: 'Approuvée' | 'Refusée') => {
     setBusy(true)
     try {
@@ -82,6 +96,9 @@ export const RHAutomatisationPaiePage = ({ title = 'Paie mensuelle', subtitle = 
 
   const pendingSheets = fiches.filter(fiche => fiche.statut === 'À valider')
   const total = fiches.reduce((sum, fiche) => sum + Number(fiche.montant || 0), 0)
+  const totalBase = fiches.reduce((sum, fiche) => sum + Number(fiche.salaire_base || 0), 0)
+  const totalAvantages = fiches.reduce((sum, fiche) => sum + Number(fiche.total_avantages || 0), 0)
+  const totalRetenues = fiches.reduce((sum, fiche) => sum + Number(fiche.retenues || 0) + Number(fiche.avance_deduite || 0), 0)
   const pendingAdvances = avances.filter(avance => avance.statut === 'En attente')
 
   return (
@@ -103,13 +120,42 @@ export const RHAutomatisationPaiePage = ({ title = 'Paie mensuelle', subtitle = 
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
         {[
           { label: 'Fiches générées', value: fiches.length, icon: FileText, tone: 'text-blue-600 bg-blue-50 dark:bg-blue-950/30' },
           { label: 'À valider', value: pendingSheets.length, icon: Clock, tone: 'text-amber-600 bg-amber-50 dark:bg-amber-950/30' },
+          { label: 'Salaires de base', value: money.format(totalBase), icon: DollarSign, tone: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30' },
+          { label: 'Avantages', value: money.format(totalAvantages), icon: Users, tone: 'text-purple-600 bg-purple-50 dark:bg-purple-950/30' },
+          { label: 'Retenues + avances', value: money.format(totalRetenues), icon: Ban, tone: 'text-rose-600 bg-rose-50 dark:bg-rose-950/30' },
           { label: 'Masse nette', value: money.format(total), icon: DollarSign, tone: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30' },
-        ].map(stat => <div key={stat.label} className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${stat.tone}`}><stat.icon className="h-5 w-5" /></div><p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p><p className="text-2xl font-bold text-slate-800 dark:text-white">{stat.value}</p></div>)}
+        ].map(stat => <div key={stat.label} className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${stat.tone}`}><stat.icon className="h-5 w-5" /></div><p className="text-sm text-slate-500 dark:text-slate-400">{stat.label}</p><p className="text-xl font-bold text-slate-800 dark:text-white">{stat.value}</p></div>)}
       </div>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
+        <div className="mb-4 flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-teal-600" />
+          <h2 className="font-bold text-slate-800 dark:text-white">Décisions à prendre</h2>
+        </div>
+        {pendingSheets.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">Aucune fiche en attente de validation.</p>
+        ) : (
+          <div className="space-y-3">
+            {pendingSheets.map(fiche => (
+              <div key={`decision-${fiche.id_paie}`} className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold text-slate-800 dark:text-white">{fiche.employe?.prenom ?? 'Employé'} {fiche.employe?.nom ?? fiche.matricule}</p>
+                  <p className="text-sm text-slate-500">Net: {money.format(Number(fiche.montant))} · Base: {money.format(Number(fiche.salaire_base || 0))}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setSelectedFiche(fiche)} className="inline-flex items-center gap-1 rounded-lg border border-teal-300 px-3 py-2 text-sm font-semibold text-teal-800 dark:text-teal-200"><Eye className="h-4 w-4" /> Détails</button>
+                  <button type="button" onClick={() => void reject(fiche.id_paie)} disabled={busy} className="inline-flex items-center gap-1 rounded-lg border border-rose-300 px-3 py-2 text-sm font-semibold text-rose-700 disabled:opacity-40"><Ban className="h-4 w-4" /> Refuser</button>
+                  <button type="button" onClick={() => void validate(fiche.id_paie)} disabled={busy || !fiche.payment_method} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40">Valider</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
         <div className="mb-4 flex items-center gap-2"><Calendar className="h-5 w-5 text-blue-600" /><h2 className="font-bold text-slate-800 dark:text-white">Générer les brouillons mensuels</h2></div>
