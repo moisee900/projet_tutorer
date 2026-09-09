@@ -30,7 +30,11 @@ const fadeInUp = {
     y: 0, 
     scale: 1,
     transition: {
+<<<<<<< Updated upstream
       type: "spring" as const, // ✅ CORRIGÉ : ajout de "as const"
+=======
+      type: "spring" as const,
+>>>>>>> Stashed changes
       stiffness: 100,
       damping: 20,
       duration: 0.8
@@ -45,7 +49,11 @@ const fadeInDown = {
     y: 0, 
     scale: 1,
     transition: {
+<<<<<<< Updated upstream
       type: "spring" as const, // ✅ CORRIGÉ : ajout de "as const"
+=======
+      type: "spring" as const,
+>>>>>>> Stashed changes
       stiffness: 100,
       damping: 20,
       duration: 0.8
