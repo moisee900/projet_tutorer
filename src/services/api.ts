@@ -778,6 +778,79 @@ export const invitationAPI = {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// CONVERSATIONS SÉCURISÉES
+// ═══════════════════════════════════════════════════════════════
+export const conversationAPI = {
+    getConversations: async () => {
+        return await apiRequest('/conversations')
+    },
+
+    getContacts: async () => {
+        return await apiRequest('/conversations/contacts')
+    },
+
+    getRhUsers: async () => {
+        return await apiRequest('/conversations/rh/users')
+    },
+
+    createConversation: async (userId: number) => {
+        return await apiRequest('/conversations', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'private',
+                participant_ids: [userId],
+            }),
+        })
+    },
+
+    createGroupConversation: async (participantIds: number[], name: string) => {
+        return await apiRequest('/conversations', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'group',
+                participant_ids: participantIds,
+                name: name,
+            }),
+        })
+    },
+
+    // ✅ CORRECTION : Créer une conversation RH
+    createRhServiceConversation: async () => {
+        return await apiRequest('/conversations', {
+            method: 'POST',
+            body: JSON.stringify({
+                type: 'rh_service',
+                // ✅ Pas besoin de participant_ids pour le service RH
+            }),
+        })
+    },
+
+    getMessages: async (conversationId: number, limit = 50, offset = 0) => {
+        return await apiRequest(`/conversations/${conversationId}/messages?limit=${limit}&offset=${offset}`)
+    },
+
+    sendMessage: async (conversationId: number, body: string) => {
+        return await apiRequest(`/conversations/${conversationId}/messages`, {
+            method: 'POST',
+            body: JSON.stringify({ body }),
+        })
+    },
+
+    addParticipant: async (conversationId: number, userId: number) => {
+        return await apiRequest(`/conversations/${conversationId}/participants`, {
+            method: 'POST',
+            body: JSON.stringify({ user_id: userId }),
+        })
+    },
+
+    deleteMessage: async (messageId: number) => {
+        return await apiRequest(`/conversations/messages/${messageId}`, {
+            method: 'DELETE',
+        })
+    },
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MESSAGERIE INTERNE ET SIGNALISATION D'APPEL WEBRTC
 // ═══════════════════════════════════════════════════════════════
 export const internalMessagingAPI = {

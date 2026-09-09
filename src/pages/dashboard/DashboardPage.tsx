@@ -80,24 +80,7 @@ const fadeInRight: Variants = {
   }
 }
 
-<<<<<<< Updated upstream
 const pulseGlow: TargetAndTransition = {
-=======
-const fadeInUpStagger = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: index * 0.06,
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1] as const
-    }
-  })
-}
-
-const pulseGlow = {
->>>>>>> Stashed changes
   scale: [1, 1.02, 1],
   opacity: [0.6, 0.8, 0.6],
   transition: {
