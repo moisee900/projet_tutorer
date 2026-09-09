@@ -4,9 +4,10 @@ import {
   Briefcase, MapPin, DollarSign, Calendar, Building2, ArrowLeft, 
   FileText, X, Copy, LogIn, LoaderCircle, Mail, RefreshCw,
   Users, Clock, Award, Shield, Sparkles, CheckCircle2, Star,
-  ArrowRight, Home, Menu, MoreHorizontal, TrendingUp, Eye, Sun, Moon
+  ArrowRight, Home, Menu, MoreHorizontal, TrendingUp, Eye, Sun, Moon,
+  AlertCircle, FileCheck
 } from 'lucide-react'
-import { motion, useAnimation, useInView, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { offreAPI } from '../services/api'
 import { BrandMark } from '../components/BrandMark'
 
@@ -67,34 +68,6 @@ const fadeInRight = {
   }
 }
 
-const fadeInDown = {
-  hidden: { opacity: 0, y: -40, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 20,
-      duration: 0.8
-    }
-  }
-}
-
-const fadeInUpStagger = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.06,
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1]
-    }
-  })
-}
-
 const pulseGlow = {
   scale: [1, 1.02, 1],
   opacity: [0.6, 0.8, 0.6],
@@ -111,17 +84,6 @@ const floatAnimation = {
     duration: 4,
     repeat: Infinity,
     ease: "easeInOut"
-  }
-}
-
-const staggerChildren = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1
-    }
   }
 }
 
@@ -209,10 +171,11 @@ export const OffreDetailPage = () => {
   const [entreprise, setEntreprise] = useState<PublicCompany | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [submissionStartedAt, setSubmissionStartedAt] = useState<number | null>(null)
   const [applicationFeedback, setApplicationFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [candidateAccount, setCandidateAccount] = useState<{ email: string; temporary_password: string | null; is_new: boolean; mail_send_url?: string | null } | null>(null)
   const [mailStatus, setMailStatus] = useState<'idle' | 'pending' | 'sent' | 'failed'>('idle')
+  const [cvFileName, setCvFileName] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const welcomeEmailsInProgress = useRef(new Set<string>())
   const heroRef = useRef<HTMLDivElement>(null)
 
@@ -280,6 +243,19 @@ export const OffreDetailPage = () => {
     }
   }
 
+  // Gestion du fichier CV
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null
+    setFormData({...formData, cv: file})
+    setCvFileName(file ? file.name : null)
+  }
+
+  // Supprimer le fichier sélectionné
+  const removeFile = () => {
+    setFormData({...formData, cv: null})
+    setCvFileName(null)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/30 to-primary-50/30 dark:from-slate-900 dark:via-primary-900/10 dark:to-primary-900/10 grid place-items-center">
@@ -332,15 +308,18 @@ export const OffreDetailPage = () => {
     )
   }
 
+  // HandleSubmit corrigé SANS CV OBLIGATOIRE
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (submitting) return
 
     setSubmitting(true)
-    setSubmissionStartedAt(Date.now())
     setApplicationFeedback(null)
+    setUploadProgress(0)
+
     try {
       const candidatureData = new FormData()
+      candidatureData.append('id_offre', String(id)) 
       candidatureData.append('nom', formData.nom)
       candidatureData.append('post_nom', formData.post_nom)
       candidatureData.append('prenom', formData.prenom)
@@ -348,33 +327,67 @@ export const OffreDetailPage = () => {
       candidatureData.append('telephone', formData.telephone)
       candidatureData.append('lettre_motivation', formData.lettre_motivation)
 
+      // On ajoute le CV seulement s'il est présent (sinon on ne l'ajoute pas au FormData)
       if (formData.cv) {
         candidatureData.append('cv', formData.cv)
       }
 
       const response = await offreAPI.postuler(Number(id), candidatureData)
-      setApplicationFeedback({ type: 'success', message: response.message || 'Votre candidature a été enregistrée. L\'entreprise examinera votre dossier.' })
+      
+      setApplicationFeedback({ 
+        type: 'success', 
+        message: response.message || 'Votre candidature a été enregistrée avec succès.' 
+      })
       setShowPostulationModal(false)
       setCandidateAccount(response.account || null)
       setMailStatus(response.account?.is_new ? 'pending' : 'idle')
+      
       if (response.account?.is_new && response.account?.mail_send_url) {
         setTimeout(() => void sendWelcomeEmail(response.account), 0)
       }
+      
       if (response.account?.token && response.account?.user) {
         localStorage.setItem('auth_token', response.account.token)
         localStorage.setItem('token', response.account.token)
         localStorage.setItem('user', JSON.stringify(response.account.user))
         window.dispatchEvent(new Event('rh-auth-changed'))
       }
-      setFormData({ nom: '', post_nom: '', prenom: '', email: '', telephone: '', cv: null, lettre_motivation: '' })
-    } catch (error) {
+      
+      // Réinitialiser le formulaire
+      setFormData({ 
+        nom: '', 
+        post_nom: '', 
+        prenom: '', 
+        email: '', 
+        telephone: '', 
+        cv: null, 
+        lettre_motivation: '' 
+      })
+      setCvFileName(null)
+      
+    } catch (error: any) {
+      setUploadProgress(0)
+      
+      let errorMessage = 'La candidature n\'a pas pu être envoyée. Veuillez réessayer.'
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+      
+      // Gestion spécifique de l'erreur CORS / 500
+      if (error?.response?.status === 500 || errorMessage.includes('Failed to fetch')) {
+        errorMessage = 'Le serveur est momentanément inaccessible. Veuillez réessayer.'
+      }
+      
       setApplicationFeedback({
         type: 'error',
-        message: error instanceof Error ? error.message : 'La candidature n\'a pas pu être envoyée. Vérifiez les informations saisies et réessayez.',
+        message: errorMessage
       })
     } finally {
       setSubmitting(false)
-      setSubmissionStartedAt(null)
+      setUploadProgress(0)
     }
   }
 
@@ -497,14 +510,13 @@ export const OffreDetailPage = () => {
         </AnimatePresence>
       </header>
 
-      {/* --- HERO SECTION AMÉLIORÉE --- */}
+      {/* --- HERO SECTION --- */}
       <motion.section 
         ref={heroRef}
         initial="hidden"
         animate="visible"
         className="relative overflow-hidden py-16"
       >
-        {/* Effet de fond animé */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div 
             className="absolute top-20 left-10 w-96 h-96 bg-primary-200/30 dark:bg-primary-900/20 rounded-full blur-3xl"
@@ -524,7 +536,6 @@ export const OffreDetailPage = () => {
             variants={containerVariants}
             className="flex flex-col lg:flex-row items-start gap-8"
           >
-            {/* Logo entreprise animé */}
             <motion.div 
               variants={fadeInLeft}
               whileHover={{ scale: 1.05, rotate: -2 }}
@@ -544,7 +555,6 @@ export const OffreDetailPage = () => {
               </motion.div>
             </motion.div>
 
-            {/* Infos principales */}
             <motion.div 
               variants={fadeInRight}
               className="flex-1"
@@ -650,7 +660,7 @@ export const OffreDetailPage = () => {
       {/* --- CONTENU PRINCIPAL --- */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        {/* Feedback de candidature amélioré */}
+        {/* Feedback de candidature */}
         <AnimatePresence>
           {applicationFeedback && (
             <motion.div 
@@ -669,11 +679,11 @@ export const OffreDetailPage = () => {
                   {applicationFeedback.type === 'success' ? (
                     <CheckCircle2 className="w-6 h-6 text-emerald-500 mt-0.5" />
                   ) : (
-                    <X className="w-6 h-6 text-red-500 mt-0.5" />
+                    <AlertCircle className="w-6 h-6 text-red-500 mt-0.5" />
                   )}
                   <div>
                     <p className="font-bold text-lg">
-                      {applicationFeedback.type === 'success' ? '✅ Candidature enregistrée' : '❌ Envoi impossible'}
+                      {applicationFeedback.type === 'success' ? 'Candidature enregistrée' : 'Envoi impossible'}
                     </p>
                     <p className="mt-1 text-sm">{applicationFeedback.message}</p>
                   </div>
@@ -704,7 +714,7 @@ export const OffreDetailPage = () => {
                 <div className="flex items-center space-x-3">
                   <Shield className="w-6 h-6" />
                   <div>
-                    <h2 className="text-lg font-bold">Votre espace candidat est prêt 🎉</h2>
+                    <h2 className="text-lg font-bold">Votre espace candidat est prêt</h2>
                     <p className="mt-1 text-sm text-teal-50">Conservez vos identifiants avant de consulter le suivi.</p>
                   </div>
                 </div>
@@ -759,10 +769,10 @@ export const OffreDetailPage = () => {
                       <Mail className="h-5 w-5" />
                     )}
                     <span>
-                      {mailStatus === 'sent' && '✅ Identifiants envoyés par e-mail.'}
-                      {mailStatus === 'failed' && '⚠️ Échec de l\'e-mail. Vos accès restent valides.'}
-                      {mailStatus === 'pending' && '📧 Envoi de l\'e-mail de bienvenue...'}
-                      {mailStatus === 'idle' && '📧 Préparation de l\'e-mail...'}
+                      {mailStatus === 'sent' && 'Identifiants envoyés par e-mail.'}
+                      {mailStatus === 'failed' && 'Echec de l\'e-mail. Vos accès restent valides.'}
+                      {mailStatus === 'pending' && 'Envoi de l\'e-mail de bienvenue...'}
+                      {mailStatus === 'idle' && 'Préparation de l\'e-mail...'}
                     </span>
                   </div>
                   {mailStatus === 'failed' && (
@@ -784,11 +794,22 @@ export const OffreDetailPage = () => {
                 >
                   <button 
                     type="button" 
-                    onClick={() => navigate(candidateAccount.is_new ? '/dashboard/utilisateur' : '/login')} 
+                    onClick={() => {
+                      if (candidateAccount.is_new) {
+                        navigate('/dashboard/utilisateur', {
+                          state: { userEmail: candidateAccount.email }
+                        })
+                        return
+                      }
+
+                      navigate('/login', {
+                        state: { email: candidateAccount.email }
+                      })
+                    }} 
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 font-bold text-white shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30 transition-all"
                   >
                     <LogIn className="h-5 w-5" />
-                    {candidateAccount.is_new ? '📊 Consulter le suivi' : '🔐 Se connecter à mon espace'}
+                    {candidateAccount.is_new ? 'Consulter le suivi' : 'Se connecter à mon espace'}
                   </button>
                 </motion.div>
               </div>
@@ -804,14 +825,12 @@ export const OffreDetailPage = () => {
         >
           {/* Colonne principale */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Description */}
             <InfoCard icon={FileText} title="Description du poste">
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                 {offre.description}
               </p>
             </InfoCard>
 
-            {/* Profil recherché */}
             <InfoCard icon={Users} title="Profil recherché">
               <div className="space-y-4">
                 <div>
@@ -837,7 +856,6 @@ export const OffreDetailPage = () => {
               </div>
             </InfoCard>
 
-            {/* Avantages */}
             <InfoCard icon={Award} title="Avantages">
               <div className="bg-gradient-to-r from-amber-50 to-amber-50/50 dark:from-amber-900/20 dark:to-amber-900/10 rounded-xl p-4 border border-amber-200 dark:border-amber-800/50">
                 <div className="flex items-start space-x-3">
@@ -849,7 +867,6 @@ export const OffreDetailPage = () => {
               </div>
             </InfoCard>
 
-            {/* Processus de recrutement */}
             <motion.div 
               variants={fadeInUp}
               className="bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-900/20 dark:to-orange-900/10 rounded-2xl p-6 border border-amber-200 dark:border-amber-800/50 shadow-lg"
@@ -889,7 +906,6 @@ export const OffreDetailPage = () => {
 
           {/* Colonne latérale */}
           <div className="space-y-6">
-            {/* Carte entreprise */}
             <motion.div 
               variants={fadeInRight}
               className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/60 dark:border-slate-700/60 sticky top-24"
@@ -951,7 +967,6 @@ export const OffreDetailPage = () => {
               </motion.div>
             </motion.div>
 
-            {/* Informations essentielles */}
             <motion.div 
               variants={fadeInRight}
               className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-slate-200/60 dark:border-slate-700/60"
@@ -1008,33 +1023,6 @@ export const OffreDetailPage = () => {
         </div>
       </footer>
 
-      {/* Navigation mobile */}
-      <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 18, scale: .96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: .96 }}
-              className="mb-3 flex justify-center gap-2 rounded-2xl bg-slate-900/90 p-2 shadow-2xl backdrop-blur-xl"
-            >
-              <Link to="/offres" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Offres</Link>
-              <Link to="/entreprises" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Entreprises</Link>
-              <Link to="/register" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Inscription</Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <nav className="flex items-center justify-around rounded-2xl border border-white/15 bg-slate-900/80 px-2 py-2 shadow-2xl backdrop-blur-xl">
-          <Link to="/" aria-label="Accueil" className="rounded-xl p-3 text-primary-300 hover:bg-white/10"><Home className="h-5 w-5" /></Link>
-          <Link to="/offres" aria-label="Offres" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Briefcase className="h-5 w-5" /></Link>
-          <button aria-label="Ouvrir le menu" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="-mt-7 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 p-4 text-white shadow-lg shadow-primary-500/40 ring-4 ring-slate-900/80">
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
-          </button>
-          <Link to="/entreprise/inscription" aria-label="Créer une entreprise" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Building2 className="h-5 w-5" /></Link>
-          <Link to="/register" aria-label="Compte" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Users className="h-5 w-5" /></Link>
-        </nav>
-      </div>
-
       {/* --- MODAL DE POSTULATION AMÉLIORÉE --- */}
       <AnimatePresence>
         {showPostulationModal && (
@@ -1086,6 +1074,23 @@ export const OffreDetailPage = () => {
                     </span>
                   </div>
                 </div>
+
+                {/* Barre de progression */}
+                {submitting && uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="w-full">
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                      <motion.div 
+                        className="bg-gradient-to-r from-primary-500 to-primary-600 h-2.5 rounded-full"
+                        initial={{ width: '0%' }}
+                        animate={{ width: `${uploadProgress}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 text-right">
+                      Envoi du CV... {uploadProgress}%
+                    </p>
+                  </div>
+                )}
 
                 {/* Champs du formulaire */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1151,29 +1156,37 @@ export const OffreDetailPage = () => {
                       placeholder="+33 6 12 34 56 78"
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  {/* <div className="sm:col-span-2">
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      CV (PDF) <span className="text-red-500">*</span>
+                      CV (PDF) <span className="text-slate-400">(Optionnel)</span>
                     </label>
                     <div className="relative">
                       <input 
                         type="file" 
-                        accept=".pdf" 
-                        onChange={(e) => setFormData({...formData, cv: e.target.files?.[0] || null})} 
-                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/30 dark:file:text-primary-300" 
-                        required 
+                        accept=".pdf,.doc,.docx" 
+                        onChange={handleFileChange} 
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/30 dark:file:text-primary-300 cursor-pointer" 
                       />
-                      {formData.cv && (
-                        <motion.span 
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded"
+                      {cvFileName && (
+                        <motion.div 
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="mt-2 flex items-center space-x-2 text-sm text-emerald-600 dark:text-emerald-400"
                         >
-                          {formData.cv.name}
-                        </motion.span>
+                          <FileCheck className="w-4 h-4" />
+                          <span>{cvFileName}</span>
+                          <button 
+                            type="button"
+                            onClick={removeFile}
+                            className="ml-auto text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </motion.div>
                       )}
                     </div>
-                  </div>
+                    <p className="mt-1 text-xs text-slate-400">Formats acceptés : PDF, DOC, DOCX (max 5MB)</p>
+                  </div> */}
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                       Lettre de motivation <span className="text-red-500">*</span>
@@ -1213,7 +1226,7 @@ export const OffreDetailPage = () => {
                         <span>Envoi en cours...</span>
                       </span>
                     ) : (
-                      '📤 Envoyer ma candidature'
+                      'Envoyer ma candidature'
                     )}
                   </motion.button>
                 </div>
@@ -1222,6 +1235,33 @@ export const OffreDetailPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Navigation mobile */}
+      <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 18, scale: .96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: .96 }}
+              className="mb-3 flex justify-center gap-2 rounded-2xl bg-slate-900/90 p-2 shadow-2xl backdrop-blur-xl"
+            >
+              <Link to="/offres" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Offres</Link>
+              <Link to="/entreprises" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Entreprises</Link>
+              <Link to="/register" className="rounded-xl px-4 py-3 text-xs font-semibold text-white hover:bg-white/10">Inscription</Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <nav className="flex items-center justify-around rounded-2xl border border-white/15 bg-slate-900/80 px-2 py-2 shadow-2xl backdrop-blur-xl">
+          <Link to="/" aria-label="Accueil" className="rounded-xl p-3 text-primary-300 hover:bg-white/10"><Home className="h-5 w-5" /></Link>
+          <Link to="/offres" aria-label="Offres" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Briefcase className="h-5 w-5" /></Link>
+          <button aria-label="Ouvrir le menu" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="-mt-7 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 p-4 text-white shadow-lg shadow-primary-500/40 ring-4 ring-slate-900/80">
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
+          </button>
+          <Link to="/entreprise/inscription" aria-label="Créer une entreprise" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Building2 className="h-5 w-5" /></Link>
+          <Link to="/register" aria-label="Compte" className="rounded-xl p-3 text-slate-300 hover:bg-white/10"><Users className="h-5 w-5" /></Link>
+        </nav>
+      </div>
 
       {/* Styles CSS supplémentaires */}
       <style>{`
