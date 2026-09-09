@@ -643,7 +643,7 @@ export const OffresEmploiPage = () => {
               {filteredOffres.map((offre, index) => {
                 const entreprise = entreprises.find(e => e.id_entreprise === offre.id_entreprise)
                 const dateLimite = offre.date_limite ? new Date(offre.date_limite).toLocaleDateString('fr-FR') : "Non spécifiée"
-                const salaireFormate = offre.salaire_base ? Number(offre.salaire_base).toLocaleString('fr-FR') : null
+                const salaireFormate = offre.salaire_base ? money.format(Number(offre.salaire_base)) : null
 
                 return (
                   <motion.div
@@ -732,7 +732,7 @@ export const OffresEmploiPage = () => {
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
                           <DollarSign className="w-4 h-4 text-emerald-500 shrink-0" />
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                            {salaireFormate ? money.format(Number(offre.salaire_base)) : 'À négocier'}
+                            {salaireFormate || 'À négocier'}
                           </span>
                         </div>
                       </div>

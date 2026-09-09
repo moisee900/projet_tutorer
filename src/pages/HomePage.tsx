@@ -10,6 +10,8 @@ import {
 } from 'lucide-react'
 import { API_BASE_URL } from '../config/api'
 
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+
 // Animations variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -573,7 +575,7 @@ export const HomePage = () => {
               {offres.map((offre: any, index: number) => {
                 const dateCreation = offre.created_at ? new Date(offre.created_at).toLocaleDateString('fr-FR') : "Récemment";
                 const dateLimite = offre.date_limite ? new Date(offre.date_limite).toLocaleDateString('fr-FR') : "Non spécifiée";
-                const salaireFormate = offre.salaire_base ? Number(offre.salaire_base).toLocaleString('fr-FR') : "À négocier";
+                const salaireFormate = offre.salaire_base ? money.format(Number(offre.salaire_base)) : "À négocier";
 
                 return (
                   <motion.div 
@@ -600,7 +602,7 @@ export const HomePage = () => {
                     <div>
                       <div className="flex justify-between items-start gap-4 mb-6">
                         <span className="inline-flex px-4 py-1.5 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-950/40 dark:to-primary-900/40 text-primary-700 dark:text-primary-300 text-xs font-bold rounded-full border border-primary-200/50 dark:border-primary-800/30">
-                          {salaireFormate !== "À négocier" ? `${salaireFormate} €` : salaireFormate}
+                          {salaireFormate}
                         </span>
                         <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center shrink-0">
                           <Calendar className="w-3.5 h-3.5 mr-1" />
