@@ -274,6 +274,17 @@ export const RHCongesPage = () => {
     return colors[type] || 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
   }
 
+  // Le badge « nouveau » reste visible 30 minutes après l'approbation.
+  const isRecentlyApproved = useCallback((conge: any) => {
+    if (conge.statut !== 'Approuve') return false
+
+    const approvalDate = conge.date_approbation || conge.approved_at || conge.approuve_at || conge.updated_at
+    if (!approvalDate) return false
+
+    const approvalTime = new Date(approvalDate).getTime()
+    return Number.isFinite(approvalTime) && Date.now() - approvalTime >= 0 && Date.now() - approvalTime < 30 * 60 * 1000
+  }, [])
+
   const statsCards = useMemo(() => [
     { 
       label: 'Total Demandes', 
@@ -554,7 +565,7 @@ export const RHCongesPage = () => {
                   />
 
                   {/* Badge nouveau */}
-                  {new Date(conge.date_debut).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 && (
+                  {isRecentlyApproved(conge) && (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
