@@ -534,7 +534,7 @@ export const DirecteurOffresPage = () => {
                     <textarea value={formData.avantages} onChange={(e) => setFormData({...formData, avantages: e.target.value})} rows={3} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none" required />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Salaire de base (€) *</label>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Salaire de base (USD) *</label>
                     <input type="number" min="0" value={formData.salaire_base} onChange={(e) => setFormData({...formData, salaire_base: e.target.value})} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all" required />
                   </div>
                   <div>

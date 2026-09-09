@@ -288,9 +288,9 @@ export const EmployeDashboard = () => {
   }), [userPaies, currentMonthPresences, currentYear])
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-FR', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'USD',
       maximumFractionDigits: 0,
     }).format(amount)
   }

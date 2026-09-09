@@ -8,9 +8,9 @@ import {
   faXmark, faHourglassHalf, faMoneyBillWave,
   faSpinner, faHistory
 } from '@fortawesome/free-solid-svg-icons'
-import { avancesPaieAPI, fichesPaieAPI, type FichePaie } from '../../services/api'
+import { avancesPaieAPI, extractFichesPaie, fichesPaieAPI, type FichePaie } from '../../services/api'
 
-const money = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' })
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
 const slideUp = {
   initial: { opacity: 0, y: 20, scale: 0.96 },
@@ -46,7 +46,7 @@ export const EmployePaiePage = () => {
     setLoading(true)
     try {
       const response = await fichesPaieAPI.getMine()
-      setFiches(response.fiches_paies ?? [])
+      setFiches(extractFichesPaie(response))
     } catch (error) {
       setFeedback({ 
         type: 'error', 

@@ -231,6 +231,50 @@ export interface FichePaie {
   id_entreprise?: number;
 }
 
+const numericPayrollValue = (value: unknown) => {
+  const amount = Number(value)
+  return Number.isFinite(amount) ? amount : 0
+}
+
+export const normalizeFichePaie = (raw: Record<string, any>): FichePaie => {
+  const salaireBase = numericPayrollValue(
+    raw.salaire_base ?? raw.base_salaire ?? raw.contrat?.salaire_base ?? raw.contrat_actif?.salaire_base
+  )
+  const totalAvantages = numericPayrollValue(
+    raw.total_avantages ?? raw.avantages_total ?? raw.avantages_actifs ?? raw.avantages ?? raw.primes
+  )
+  const retenues = numericPayrollValue(
+    raw.retenues ?? raw.total_retenues ?? raw.retenues_absences ?? raw.deductions ?? raw.deductions_total
+  )
+  const avanceDeduite = numericPayrollValue(
+    raw.avance_deduite ?? raw.avance ?? raw.avances_deduites
+  )
+  const netFromApi = numericPayrollValue(raw.montant ?? raw.salaire_net ?? raw.net_a_payer ?? raw.montant_net)
+  const calculatedNet = salaireBase + totalAvantages - retenues - avanceDeduite
+
+  return {
+    ...raw,
+    id_paie: numericPayrollValue(raw.id_paie ?? raw.id),
+    matricule: String(raw.matricule ?? raw.employe?.matricule ?? ''),
+    mois_paiement: String(raw.mois_paiement ?? raw.mois ?? ''),
+    annee_paiement: String(raw.annee_paiement ?? raw.annee ?? ''),
+    montant: netFromApi > 0 ? netFromApi : Math.max(calculatedNet, 0),
+    statut: String(raw.statut ?? 'Générée'),
+    salaire_base: salaireBase,
+    total_avantages: totalAvantages,
+    retenues,
+    avance_deduite: avanceDeduite,
+  }
+}
+
+export const extractFichesPaie = (response: any): FichePaie[] => {
+  const records = Array.isArray(response)
+    ? response
+    : response?.fiches_paies ?? response?.fiches ?? response?.paies ?? []
+
+  return Array.isArray(records) ? records.map(normalizeFichePaie) : []
+}
+
 export interface EmployeePaymentMethod {
   id: number;
   type: 'Compte bancaire' | 'Airtel Money' | 'M-Pesa' | 'Orange Money';
@@ -1024,7 +1068,8 @@ export const candidatAPI = {
 // ═══════════════════════════════════════════════════════════════
 export const fichesPaieAPI = {
   getAll: async () => {
-    return await apiRequest('/rh/fiches_paies');
+    const response = await apiRequest('/rh/fiches_paies')
+    return { ...(Array.isArray(response) ? {} : response), fiches_paies: extractFichesPaie(response) }
   },
 
   generate: async (mois: number, annee: number) => {
@@ -1047,7 +1092,8 @@ export const fichesPaieAPI = {
   },
 
   getMine: async () => {
-    return await apiRequest('/mon-espace/mes-paies');
+    const response = await apiRequest('/mon-espace/mes-paies')
+    return { ...(Array.isArray(response) ? {} : response), fiches_paies: extractFichesPaie(response) }
   },
 };
 

@@ -1,4 +1,4 @@
-import { apiRequest, authAPI, entrepriseAPI, employeAPI, congeAPI, presenceAPI, fichesPaieAPI, avantageAPI, documentAPI, offreAPI, userAPI } from './api'
+import { apiRequest, authAPI, entrepriseAPI, employeAPI, congeAPI, presenceAPI, fichesPaieAPI, avantageAPI, documentAPI, offreAPI, userAPI, extractFichesPaie } from './api'
 
 export interface DashboardContext {
   user: any
@@ -87,7 +87,7 @@ export const loadDashboardContext = async (forceRefresh = false): Promise<Dashbo
         contrats: [],
         conges: [],
         presences: extractArray(presencesResponse, 'presences'),
-        fichesPaie: extractArray(fichesPaieResponse, 'fiches_paies'),
+        fichesPaie: extractFichesPaie(fichesPaieResponse),
         avantages: [],
         documents: extractArray(documentsResponse, 'documents'),
         offres: [],
@@ -198,7 +198,7 @@ export const loadDashboardContext = async (forceRefresh = false): Promise<Dashbo
     const contrats = filterByEntreprise(extractArray(contratsResponse, 'rh/contrats'))
     const conges = filterByEntreprise(extractArray(congesResponse, 'rh/conges'))
     const presences = filterByEntreprise(extractArray(presencesResponse, 'rh/presences'))
-    const fichesPaie = filterByEntreprise(extractArray(fichesPaieResponse, 'fiches_paies'))
+    const fichesPaie = filterByEntreprise(extractFichesPaie(fichesPaieResponse))
     const avantages = filterByEntreprise(extractArray(avantagesResponse, 'rh/avantages'))
     const documents = filterByEntreprise(extractArray(documentsResponse, 'rh/documents'))
     const offres = filterByEntreprise(extractArray(offresResponse, 'rh/offres'))

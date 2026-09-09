@@ -97,7 +97,7 @@ export const AdminSettingsPage = () => {
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Devise</label>
                   <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500">
                     <option>USD ($)</option>
-                    <option>EUR (€)</option>
+                    <option>USD ($)</option>
                     <option>CDF (FC)</option>
                   </select>
                 </div>
